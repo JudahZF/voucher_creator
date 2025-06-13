@@ -11,7 +11,7 @@ This document describes the migration from Bootstrap to Tailwind CSS and the ext
 HTML templates have been moved from inline strings in `src/templates.rs` to separate files in the `templates/` directory:
 
 - `templates/index.html` - Main landing page
-- `templates/no-vouchers.html` - No vouchers found page  
+- `templates/no-vouchers.html` - No vouchers found page
 - `templates/admin.html` - Admin panel
 - `templates/network-vouchers.html` - Network vouchers listing
 - `templates/voucher-card.html` - Individual voucher card template
@@ -34,7 +34,7 @@ HTML templates have been moved from inline strings in `src/templates.rs` to sepa
 
 #### Color Scheme
 - Primary: Blue (`blue-600`, `blue-700`)
-- Success: Green (`green-600`, `green-700`) 
+- Success: Green (`green-600`, `green-700`)
 - Warning: Yellow (`yellow-500`, `yellow-600`)
 - Error: Red (`red-600`, `red-700`)
 - Gray scale for backgrounds and text
@@ -69,9 +69,10 @@ pub fn index_template() -> String {
     load_template("index")
 }
 
-pub fn generate_voucher_card(qr_code_base64: &str, network_ssid: &str, voucher_code: &str) -> String {
+pub fn generate_voucher_card(qr_code_base64: &str, network_name: &str, network_ssid: &str, voucher_code: &str) -> String {
     voucher_card_template()
         .replace("{{QR_CODE_BASE64}}", qr_code_base64)
+        .replace("{{NETWORK_NAME}}", network_name)
         .replace("{{NETWORK_SSID}}", network_ssid)
         .replace("{{VOUCHER_CODE}}", voucher_code)
 }
@@ -107,7 +108,7 @@ Templates now use placeholder replacement for dynamic content:
         <div>Network: {{NETWORK_SSID}}</div>
         <div>Voucher Code: {{VOUCHER_CODE}}</div>
     </div>
-    
+
     <!-- Right side - QR Code -->
     <div class="flex-shrink-0">
         <img src="data:image/png;base64,{{QR_CODE_BASE64}}" />
@@ -168,7 +169,7 @@ This migration maintains full backward compatibility with existing functionality
 The voucher card design can now be easily customized by editing `templates/voucher-card.html`:
 
 - **Layout**: Modify the flex layout to change QR code and text positioning
-- **Styling**: Update Tailwind classes for colors, fonts, and spacing  
+- **Styling**: Update Tailwind classes for colors, fonts, and spacing
 - **Content**: Add additional fields like expiration dates or terms
 - **Branding**: Include logos or custom styling elements
 

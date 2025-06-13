@@ -25,10 +25,16 @@ pub fn vouchers_template() -> String {
     load_template("vouchers")
 }
 
-pub fn generate_voucher_card(qr_code_base64: &str, network_ssid: &str, voucher_code: &str) -> String {
+pub fn generate_voucher_card(
+    qr_code_base64: &str,
+    network_ssid: &str,
+    network_name: &str,
+    voucher_code: &str,
+) -> String {
     voucher_card_template()
         .replace("{{QR_CODE_BASE64}}", qr_code_base64)
         .replace("{{NETWORK_SSID}}", network_ssid)
+        .replace("{{NETWORK_NAME}}", network_name)
         .replace("{{VOUCHER_CODE}}", voucher_code)
 }
 
@@ -78,12 +84,21 @@ pub fn success_response(title: &str, message: &str, voucher_count: usize, button
     response_template()
         .replace("{{TITLE}}", title)
         .replace("{{SUBTITLE}}", "Operation completed successfully")
-        .replace("{{HEADER_GRADIENT}}", "bg-gradient-to-r from-emerald-500 to-teal-600")
+        .replace(
+            "{{HEADER_GRADIENT}}",
+            "bg-gradient-to-r from-emerald-500 to-teal-600",
+        )
         .replace("{{ICON_CLASS}}", "fas fa-check-circle")
         .replace("{{TEXT_COLOR_CLASS}}", "text-emerald-100")
-        .replace("{{MESSAGE_BG_CLASS}}", "bg-gradient-to-r from-green-50 to-emerald-50")
+        .replace(
+            "{{MESSAGE_BG_CLASS}}",
+            "bg-gradient-to-r from-green-50 to-emerald-50",
+        )
         .replace("{{MESSAGE_BORDER_CLASS}}", "border-green-200")
-        .replace("{{MESSAGE_ICON_CLASS}}", "fas fa-check-circle text-green-600")
+        .replace(
+            "{{MESSAGE_ICON_CLASS}}",
+            "fas fa-check-circle text-green-600",
+        )
         .replace("{{MESSAGE_TEXT_CLASS}}", "text-green-800")
         .replace("{{MESSAGE_TITLE}}", "Success!")
         .replace("{{MESSAGE_CONTENT}}", message)
@@ -99,13 +114,25 @@ pub fn success_response(title: &str, message: &str, voucher_count: usize, button
 pub fn error_response(title: &str, message: &str, buttons: &str) -> String {
     response_template()
         .replace("{{TITLE}}", title)
-        .replace("{{SUBTITLE}}", "An error occurred while processing your request")
-        .replace("{{HEADER_GRADIENT}}", "bg-gradient-to-r from-red-500 to-pink-600")
+        .replace(
+            "{{SUBTITLE}}",
+            "An error occurred while processing your request",
+        )
+        .replace(
+            "{{HEADER_GRADIENT}}",
+            "bg-gradient-to-r from-red-500 to-pink-600",
+        )
         .replace("{{ICON_CLASS}}", "fas fa-exclamation-triangle")
         .replace("{{TEXT_COLOR_CLASS}}", "text-red-100")
-        .replace("{{MESSAGE_BG_CLASS}}", "bg-gradient-to-r from-red-50 to-pink-50")
+        .replace(
+            "{{MESSAGE_BG_CLASS}}",
+            "bg-gradient-to-r from-red-50 to-pink-50",
+        )
         .replace("{{MESSAGE_BORDER_CLASS}}", "border-red-200")
-        .replace("{{MESSAGE_ICON_CLASS}}", "fas fa-exclamation-circle text-red-600")
+        .replace(
+            "{{MESSAGE_ICON_CLASS}}",
+            "fas fa-exclamation-circle text-red-600",
+        )
         .replace("{{MESSAGE_TEXT_CLASS}}", "text-red-800")
         .replace("{{MESSAGE_TITLE}}", "Error!")
         .replace("{{MESSAGE_CONTENT}}", message)
@@ -120,7 +147,7 @@ pub fn error_response(title: &str, message: &str, buttons: &str) -> String {
 
 pub fn admin_template(networks: &[&WiFiNetwork], voucher_manager: &VoucherManager) -> String {
     let template = load_template("admin");
-    
+
     let network_rows = networks
         .iter()
         .map(|network| {
@@ -135,7 +162,7 @@ pub fn admin_template(networks: &[&WiFiNetwork], voucher_manager: &VoucherManage
                     <i class="fas fa-times-circle mr-1"></i>Inactive
                 </span>"#
             };
-            
+
             format!(
                 r#"
                 <tr class="group hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 border-b border-gray-100">
@@ -242,7 +269,7 @@ pub fn network_vouchers_template(
     network_id: &str,
 ) -> String {
     let template = load_template("network-vouchers");
-    
+
     let network_info = match network {
         Some(net) => format!(
             r#"
@@ -322,7 +349,7 @@ pub fn network_vouchers_template(
                     <i class="fas fa-check-circle mr-1"></i>Available
                 </span>"#
             };
-            
+
             format!(
                 r#"
                 <tr class="group hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 transition-all duration-300 border-b border-gray-100">
@@ -395,4 +422,3 @@ pub fn network_vouchers_template(
         .replace("{{EMPTY_VOUCHERS_MESSAGE}}", empty_vouchers_message)
         .replace("{{VOUCHER_ROWS}}", &voucher_rows)
 }
-

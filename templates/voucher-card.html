@@ -1,17 +1,24 @@
-<div class="bg-white border-2 border-blue-500 rounded-lg shadow-md p-4 mb-4 voucher-card" style="page-break-inside: avoid;">
+<div
+    class="bg-white border-2 border-blue-500 rounded-lg shadow-md p-4 mb-4 voucher-card"
+    style="page-break-inside: avoid"
+>
     <div class="flex items-center justify-between h-32">
         <!-- Left side - Text information -->
         <div class="flex-1 pr-4">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">WiFi Access Voucher</h3>
+            <h3 class="text-lg font-bold text-gray-800 mb-2">
+                WiFi Access Voucher
+            </h3>
             <div class="space-y-1">
                 <div class="text-sm">
                     <span class="font-medium text-gray-700">Network:</span>
-                    <span class="text-gray-600">{{NETWORK_SSID}}</span>
+                    <span class="text-gray-600">{{NETWORK_NAME}}</span>
                 </div>
                 <div class="text-sm">
                     <span class="font-medium text-gray-700">Voucher Code:</span>
                 </div>
-                <div class="bg-gray-100 px-2 py-1 rounded text-xs font-mono font-bold text-gray-800 break-all">
+                <div
+                    class="bg-gray-100 px-2 py-1 rounded text-xs font-mono font-bold text-gray-800 break-all"
+                >
                     {{VOUCHER_CODE}}
                 </div>
                 <div class="text-xs text-gray-500 mt-1">
@@ -19,13 +26,15 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Right side - QR Code -->
         <div class="flex-shrink-0">
             <div class="w-24 h-24 border border-gray-300 rounded p-1 bg-white">
-                <img src="data:image/png;base64,{{QR_CODE_BASE64}}" 
-                     alt="WiFi QR Code" 
-                     class="w-full h-full object-contain">
+                <img
+                    src="data:image/png;base64,{{QR_CODE_BASE64}}"
+                    alt="WiFi QR Code"
+                    class="w-full h-full object-contain"
+                />
             </div>
         </div>
     </div>

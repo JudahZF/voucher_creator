@@ -7,17 +7,13 @@ use axum::{
 };
 use clap::Parser;
 use serde::Deserialize;
-use std::{
-    collections::HashMap,
-    net::SocketAddr,
-    sync::Arc,
-};
+use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 use tokio::sync::RwLock;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
 mod qr_generator;
-mod voucher;
 mod templates;
+mod voucher;
 mod wifi_network;
 
 use qr_generator::QrGenerator;
@@ -55,7 +51,7 @@ struct AppState {
 
 #[derive(Deserialize)]
 struct GenerateQuery {
-    format: Option<String>, // "html" or "pdf"
+    format: Option<String>,     // "html" or "pdf"
     network_id: Option<String>, // specific network ID
 }
 
@@ -91,7 +87,7 @@ async fn main() -> anyhow::Result<()> {
     println!("Server: http://{}:{}", args.host, args.port);
 
     let mut network_manager = WiFiNetworkManager::new();
-    
+
     // Create default network from command line args if provided
     if let (Some(ssid), Some(password)) = (args.ssid.as_ref(), args.password.as_ref()) {
         let default_network = WiFiNetwork::new(
@@ -144,10 +140,10 @@ mod tests {
     #[tokio::test]
     async fn test_csv_processing_with_comments() {
         let csv_data = b"voucher_code\n# This is a comment\nVOUCHER001\n# Another comment\nVOUCHER002\n\n# Final comment\nVOUCHER003";
-        
+
         let result = process_csv_data(csv_data).await;
         assert!(result.is_ok());
-        
+
         let vouchers = result.unwrap();
         assert_eq!(vouchers.len(), 3);
         assert_eq!(vouchers[0].code, "VOUCHER001");
@@ -158,10 +154,10 @@ mod tests {
     #[tokio::test]
     async fn test_csv_processing_ignores_empty_lines() {
         let csv_data = b"VOUCHER001\nVOUCHER002\nVOUCHER003";
-        
+
         let result = process_csv_data(csv_data).await;
         assert!(result.is_ok());
-        
+
         let vouchers = result.unwrap();
         // CSV reader treats first line as header and skips it
         assert_eq!(vouchers.len(), 2);
@@ -172,19 +168,22 @@ mod tests {
     #[tokio::test]
     async fn test_csv_processing_only_comments() {
         let csv_data = b"# Comment 1\n# Comment 2\n# Comment 3";
-        
+
         let result = process_csv_data(csv_data).await;
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("No valid voucher codes found"));
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("No valid voucher codes found"));
     }
 
     #[tokio::test]
     async fn test_csv_processing_mixed_content() {
         let csv_data = b"# WiFi Codes\nvoucher_code\n# Hotel codes\nHOTEL-001\nHOTEL-002\n# Guest codes\nGUEST-001\n# End";
-        
+
         let result = process_csv_data(csv_data).await;
         assert!(result.is_ok());
-        
+
         let vouchers = result.unwrap();
         assert_eq!(vouchers.len(), 4); // voucher_code header is treated as a voucher code
         assert_eq!(vouchers[0].code, "voucher_code");
@@ -198,9 +197,9 @@ mod tests {
 async fn admin_page(State(state): State<AppState>) -> Html<String> {
     let network_manager = state.wifi_network_manager.read().await;
     let voucher_manager = state.voucher_manager.read().await;
-    
+
     let networks = network_manager.get_all_networks();
-    
+
     Html(templates::admin_template(&networks, &voucher_manager))
 }
 
@@ -209,25 +208,38 @@ async fn create_network(
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, StatusCode> {
     let mut form_data: HashMap<String, String> = HashMap::new();
-    
-    while let Some(field) = multipart.next_field().await.map_err(|_| StatusCode::BAD_REQUEST)? {
+
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|_| StatusCode::BAD_REQUEST)?
+    {
         if let Some(name) = field.name() {
             let name = name.to_string();
             let value = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
             form_data.insert(name, value);
         }
     }
-    
-    let ssid = form_data.get("ssid").ok_or(StatusCode::BAD_REQUEST)?.clone();
-    let password = form_data.get("password").ok_or(StatusCode::BAD_REQUEST)?.clone();
-    let name = form_data.get("name").ok_or(StatusCode::BAD_REQUEST)?.clone();
+
+    let ssid = form_data
+        .get("ssid")
+        .ok_or(StatusCode::BAD_REQUEST)?
+        .clone();
+    let password = form_data
+        .get("password")
+        .ok_or(StatusCode::BAD_REQUEST)?
+        .clone();
+    let name = form_data
+        .get("name")
+        .ok_or(StatusCode::BAD_REQUEST)?
+        .clone();
     let description = form_data.get("description").cloned();
-    
+
     let network = WiFiNetwork::new(name, ssid, password, description);
-    
+
     let mut network_manager = state.wifi_network_manager.write().await;
     network_manager.add_network(network);
-    
+
     Ok(axum::response::Redirect::to("/admin").into_response())
 }
 
@@ -237,10 +249,10 @@ async fn delete_network(
 ) -> impl IntoResponse {
     let mut network_manager = state.wifi_network_manager.write().await;
     let mut voucher_manager = state.voucher_manager.write().await;
-    
+
     network_manager.remove_network(&network_id);
     voucher_manager.remove_vouchers_for_network(&network_id);
-    
+
     axum::response::Redirect::to("/admin")
 }
 
@@ -250,33 +262,41 @@ async fn admin_upload_csv(
 ) -> Result<impl IntoResponse, StatusCode> {
     let mut network_id = String::new();
     let mut csv_data = Vec::new();
-    
-    while let Some(field) = multipart.next_field().await.map_err(|_| StatusCode::BAD_REQUEST)? {
+
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|_| StatusCode::BAD_REQUEST)?
+    {
         match field.name() {
             Some("network_id") => {
                 network_id = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
             }
             Some("csv_file") => {
-                csv_data = field.bytes().await.map_err(|_| StatusCode::BAD_REQUEST)?.to_vec();
+                csv_data = field
+                    .bytes()
+                    .await
+                    .map_err(|_| StatusCode::BAD_REQUEST)?
+                    .to_vec();
             }
             _ => {}
         }
     }
-    
+
     if network_id.is_empty() || csv_data.is_empty() {
         return Err(StatusCode::BAD_REQUEST);
     }
-    
+
     match process_csv_data(&csv_data).await {
         Ok(mut vouchers) => {
             // Assign network ID to all vouchers
             for voucher in &mut vouchers {
                 voucher.network_id = Some(network_id.clone());
             }
-            
+
             let mut manager = state.voucher_manager.write().await;
             manager.add_vouchers(vouchers.clone());
-            
+
             Ok(axum::response::Redirect::to("/admin").into_response())
         }
         Err(_) => Err(StatusCode::BAD_REQUEST),
@@ -289,11 +309,15 @@ async fn network_vouchers(
 ) -> Html<String> {
     let voucher_manager = state.voucher_manager.read().await;
     let network_manager = state.wifi_network_manager.read().await;
-    
+
     let network = network_manager.get_network(&network_id);
     let vouchers = voucher_manager.get_vouchers_for_network(&network_id);
-    
-    Html(templates::network_vouchers_template(network, &vouchers, &network_id))
+
+    Html(templates::network_vouchers_template(
+        network,
+        &vouchers,
+        &network_id,
+    ))
 }
 
 async fn index() -> Html<String> {
@@ -304,15 +328,19 @@ async fn upload_csv(
     State(state): State<AppState>,
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, StatusCode> {
-    while let Some(field) = multipart.next_field().await.map_err(|_| StatusCode::BAD_REQUEST)? {
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|_| StatusCode::BAD_REQUEST)?
+    {
         if field.name() == Some("csv_file") {
             let data = field.bytes().await.map_err(|_| StatusCode::BAD_REQUEST)?;
-            
+
             match process_csv_data(&data).await {
                 Ok(vouchers) => {
                     let mut manager = state.voucher_manager.write().await;
                     manager.add_vouchers(vouchers);
-                    
+
                     let buttons = format!(
                         r#"
                         <a href="/vouchers" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
@@ -326,7 +354,7 @@ async fn upload_csv(
                         </a>
                         "#
                     );
-                    
+
                     return Ok((
                         StatusCode::OK,
                         Html(templates::success_response(
@@ -346,7 +374,7 @@ async fn upload_csv(
                             <i class="fas fa-cog mr-2"></i>Try Admin Panel
                         </a>
                     "#;
-                    
+
                     return Ok((
                         StatusCode::BAD_REQUEST,
                         Html(templates::error_response(
@@ -389,7 +417,7 @@ async fn process_csv_data(data: &[u8]) -> anyhow::Result<Vec<Voucher>> {
 async fn list_vouchers(State(state): State<AppState>) -> Html<String> {
     let manager = state.voucher_manager.read().await;
     let vouchers = manager.get_all_vouchers();
-    
+
     if vouchers.is_empty() {
         return Html(templates::no_vouchers_template());
     }
@@ -397,11 +425,13 @@ async fn list_vouchers(State(state): State<AppState>) -> Html<String> {
     let voucher_list = vouchers
         .iter()
         .enumerate()
-        .map(|(i, v)| format!(
-            r#"<tr><td>{}</td><td><code>{}</code></td></tr>"#,
-            i + 1,
-            v.code
-        ))
+        .map(|(i, v)| {
+            format!(
+                r#"<tr><td>{}</td><td><code>{}</code></td></tr>"#,
+                i + 1,
+                v.code
+            )
+        })
         .collect::<Vec<_>>()
         .join("\n");
 
@@ -417,12 +447,12 @@ async fn list_vouchers(State(state): State<AppState>) -> Html<String> {
             <div class="container mt-4">
                 <h1>Loaded Vouchers</h1>
                 <p class="text-muted">Total: {} vouchers</p>
-                
+
                 <div class="mb-3">
                     <a href="/" class="btn btn-secondary">Back to Upload</a>
                     <a href="/generate" class="btn btn-success">Generate QR Codes</a>
                 </div>
-                
+
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -451,21 +481,32 @@ async fn generate_vouchers(
 ) -> Result<impl IntoResponse, StatusCode> {
     let manager = state.voucher_manager.read().await;
     let network_manager = state.wifi_network_manager.read().await;
-    
+
     // Determine which network to use
-    let (network_ssid, network_password, network_name, vouchers) = if let Some(network_id) = &params.network_id {
+    let (network_ssid, network_password, network_name, vouchers) = if let Some(network_id) =
+        &params.network_id
+    {
         // Generate vouchers for specific network
-        let network = network_manager.get_network(network_id)
+        let network = network_manager
+            .get_network(network_id)
             .ok_or(StatusCode::NOT_FOUND)?;
         let vouchers = manager.get_vouchers_for_network(network_id);
-        (network.ssid.clone(), network.password.clone(), network.name.clone(), vouchers)
+        (
+            network.ssid.clone(),
+            network.password.clone(),
+            network.name.clone(),
+            vouchers,
+        )
     } else {
         // Generate vouchers for default network (backward compatibility)
         let vouchers = manager.get_all_vouchers();
         match (&state.default_wifi_ssid, &state.default_wifi_password) {
-            (Some(ssid), Some(password)) => {
-                (ssid.clone(), password.clone(), "Default Network".to_string(), vouchers)
-            }
+            (Some(ssid), Some(password)) => (
+                ssid.clone(),
+                password.clone(),
+                "Default Network".to_string(),
+                vouchers,
+            ),
             _ => {
                 let buttons = r#"
                     <a href="/admin" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
@@ -475,7 +516,7 @@ async fn generate_vouchers(
                         <i class="fas fa-home mr-2"></i>Back to Home
                     </a>
                 "#;
-                    
+
                 return Ok(Html(templates::error_response(
                     "No Network Configuration",
                     "No default network is configured and no specific network was selected. Please use the Admin Panel to create networks first, then generate vouchers for specific networks.",
@@ -484,7 +525,7 @@ async fn generate_vouchers(
             }
         }
     };
-    
+
     if vouchers.is_empty() {
         return Ok(Html(templates::no_vouchers_template()).into_response());
     }
@@ -492,8 +533,7 @@ async fn generate_vouchers(
     // Generate WiFi QR code
     let wifi_qr_data = format!(
         "WIFI:T:WPA;S:{};P:{};H:false;;",
-        network_ssid,
-        network_password
+        network_ssid, network_password
     );
 
     let wifi_qr_base64 = match state.qr_generator.generate_qr_base64(&wifi_qr_data) {
@@ -508,7 +548,8 @@ async fn generate_vouchers(
             templates::generate_voucher_card(
                 &wifi_qr_base64,
                 &network_ssid,
-                &voucher.code
+                &network_name,
+                &voucher.code,
             )
         })
         .collect::<Vec<_>>()
@@ -518,7 +559,7 @@ async fn generate_vouchers(
         vouchers.len(),
         &network_name,
         &network_ssid,
-        &voucher_cards
+        &voucher_cards,
     );
 
     Ok(Html(html_content).into_response())
