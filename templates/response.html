@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{TITLE}} - WiFi Voucher Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-gentle': 'bounce 1s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-wifi text-white"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-xl font-bold text-gray-800">WiFi Voucher Generator</h1>
+                        <p class="text-sm text-gray-500">{{SUBTITLE}}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="flex items-center px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200">
+                        <i class="fas fa-home mr-2"></i>
+                        <span class="hidden sm:inline">Home</span>
+                    </a>
+                    <a href="/admin" class="flex items-center px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200">
+                        <i class="fas fa-cog mr-2"></i>
+                        <span class="hidden sm:inline">Admin</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-16">
+        <div class="max-w-2xl mx-auto">
+            <!-- Main Response Card -->
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 animate-fade-in">
+                <!-- Header Section -->
+                <div class="{{HEADER_GRADIENT}} p-8 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative z-10 text-center">
+                        <div class="mb-6">
+                            <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                                <i class="{{ICON_CLASS}} text-4xl text-white"></i>
+                            </div>
+                        </div>
+                        <h1 class="text-3xl font-bold text-white mb-3">{{TITLE}}</h1>
+                        <p class="text-lg {{TEXT_COLOR_CLASS}} leading-relaxed">{{SUBTITLE}}</p>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div class="p-8">
+                    <!-- Message -->
+                    <div class="text-center mb-8">
+                        <div class="{{MESSAGE_BG_CLASS}} rounded-2xl p-6 border {{MESSAGE_BORDER_CLASS}}">
+                            <div class="flex items-start justify-center">
+                                <i class="{{MESSAGE_ICON_CLASS}} mr-3 mt-1 text-xl"></i>
+                                <div class="text-left">
+                                    <h3 class="font-bold {{MESSAGE_TEXT_CLASS}} text-lg mb-2">{{MESSAGE_TITLE}}</h3>
+                                    <div class="{{MESSAGE_TEXT_CLASS}}">{{MESSAGE_CONTENT}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Info (if provided) -->
+                    {{ADDITIONAL_INFO}}
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        {{PRIMARY_BUTTON}}
+                        {{SECONDARY_BUTTONS}}
+                    </div>
+
+                    <!-- Quick Stats (if applicable) -->
+                    {{STATS_SECTION}}
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="mt-8 bg-white rounded-2xl shadow-lg p-6 border border-gray-200 animate-slide-up">
+                <div class="text-center">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">
+                        <i class="fas fa-question-circle mr-2 text-blue-500"></i>Need Help?
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div class="p-4 bg-blue-50 rounded-xl border border-blue-200">
+                            <i class="fas fa-file-alt text-blue-600 mb-2 text-lg"></i>
+                            <p class="font-medium text-blue-800">Check CSV Format</p>
+                            <p class="text-blue-600">Ensure proper formatting</p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-xl border border-green-200">
+                            <i class="fas fa-network-wired text-green-600 mb-2 text-lg"></i>
+                            <p class="font-medium text-green-800">Network Settings</p>
+                            <p class="text-green-600">Verify WiFi credentials</p>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                            <i class="fas fa-print text-purple-600 mb-2 text-lg"></i>
+                            <p class="font-medium text-purple-800">Print Vouchers</p>
+                            <p class="text-purple-600">Generate & print codes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white mt-16 py-8 border-t border-gray-200">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-600 flex items-center">
+                        <i class="fas fa-wifi mr-2"></i>WiFi Voucher Generator
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-600 flex items-center">
+                        <i class="fas fa-code mr-2"></i>Built with Rust & Axum
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Auto-redirect functionality
+        const autoRedirect = {{AUTO_REDIRECT}};
+        const redirectUrl = '{{REDIRECT_URL}}';
+        const redirectDelay = {{REDIRECT_DELAY}};
+
+        if (autoRedirect && redirectUrl && redirectDelay > 0) {
+            let countdown = redirectDelay;
+            const countdownElement = document.getElementById('countdown');
+            
+            const updateCountdown = () => {
+                if (countdownElement) {
+                    countdownElement.textContent = countdown;
+                }
+                
+                if (countdown <= 0) {
+                    window.location.href = redirectUrl;
+                } else {
+                    countdown--;
+                    setTimeout(updateCountdown, 1000);
+                }
+            };
+            
+            setTimeout(updateCountdown, 1000);
+        }
+
+        // Copy to clipboard functionality
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Show success feedback
+                const button = event.target.closest('button');
+                const originalContent = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check mr-2"></i>Copied!';
+                button.classList.add('bg-green-500', 'hover:bg-green-600');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalContent;
+                    button.classList.remove('bg-green-500', 'hover:bg-green-600');
+                }, 2000);
+            });
+        }
+
+        // Smooth animations on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.animate-fade-in, .animate-slide-up');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 100}ms`;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -27,13 +27,13 @@ use wifi_network::{WiFiNetwork, WiFiNetworkManager};
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// WiFi SSID
+    /// WiFi SSID (optional - creates default network if provided)
     #[arg(short, long)]
-    ssid: String,
+    ssid: Option<String>,
 
-    /// WiFi Password
+    /// WiFi Password (required if SSID is provided)
     #[arg(short, long)]
-    password: String,
+    password: Option<String>,
 
     /// Port to run the web server on
     #[arg(long, default_value = "3000")]
@@ -46,8 +46,8 @@ struct Args {
 
 #[derive(Clone)]
 struct AppState {
-    wifi_ssid: String,
-    wifi_password: String,
+    default_wifi_ssid: Option<String>,
+    default_wifi_password: Option<String>,
     voucher_manager: Arc<RwLock<VoucherManager>>,
     wifi_network_manager: Arc<RwLock<WiFiNetworkManager>>,
     qr_generator: QrGenerator,
@@ -76,24 +76,36 @@ struct VoucherUploadForm {
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
+    // Validate that if SSID is provided, password must also be provided
+    if args.ssid.is_some() && args.password.is_none() {
+        eprintln!("Error: Password is required when SSID is provided");
+        std::process::exit(1);
+    }
+
     println!("Starting WiFi Voucher Generator");
-    println!("SSID: {}", args.ssid);
+    if let Some(ref ssid) = args.ssid {
+        println!("Default SSID: {}", ssid);
+    } else {
+        println!("No default network - use admin panel to create networks");
+    }
     println!("Server: http://{}:{}", args.host, args.port);
 
     let mut network_manager = WiFiNetworkManager::new();
     
-    // Create default network from command line args
-    let default_network = WiFiNetwork::new(
-        "Default Network".to_string(),
-        args.ssid.clone(),
-        args.password.clone(),
-        Some("Network created from command line arguments".to_string()),
-    );
-    network_manager.add_network(default_network);
+    // Create default network from command line args if provided
+    if let (Some(ssid), Some(password)) = (args.ssid.as_ref(), args.password.as_ref()) {
+        let default_network = WiFiNetwork::new(
+            "Default Network".to_string(),
+            ssid.clone(),
+            password.clone(),
+            Some("Network created from command line arguments".to_string()),
+        );
+        network_manager.add_network(default_network);
+    }
 
     let state = AppState {
-        wifi_ssid: args.ssid,
-        wifi_password: args.password,
+        default_wifi_ssid: args.ssid,
+        default_wifi_password: args.password,
         voucher_manager: Arc::new(RwLock::new(VoucherManager::new())),
         wifi_network_manager: Arc::new(RwLock::new(network_manager)),
         qr_generator: QrGenerator::new(),
@@ -301,34 +313,46 @@ async fn upload_csv(
                     let mut manager = state.voucher_manager.write().await;
                     manager.add_vouchers(vouchers);
                     
+                    let buttons = format!(
+                        r#"
+                        <a href="/vouchers" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-list mr-2"></i>View Vouchers
+                        </a>
+                        <a href="/generate" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-qrcode mr-2"></i>Generate QR Codes
+                        </a>
+                        <a href="/admin" class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-cog mr-2"></i>Admin Panel
+                        </a>
+                        "#
+                    );
+                    
                     return Ok((
                         StatusCode::OK,
-                        Html(format!(
-                            r#"
-                            <div class="alert alert-success">
-                                <h4>Success!</h4>
-                                <p>CSV uploaded successfully. {} vouchers loaded.</p>
-                                <a href="/vouchers" class="btn btn-primary">View Vouchers</a>
-                                <a href="/generate" class="btn btn-success">Generate QR Codes</a>
-                                <a href="/admin" class="btn btn-info">Admin Panel</a>
-                            </div>
-                            "#,
-                            manager.voucher_count()
+                        Html(templates::success_response(
+                            "CSV Uploaded Successfully!",
+                            &format!("Your CSV file has been processed and {} voucher codes have been loaded into the system. You can now generate QR code vouchers for printing.", manager.voucher_count()),
+                            manager.voucher_count(),
+                            &buttons
                         ))
                     ));
                 }
                 Err(e) => {
+                    let buttons = r#"
+                        <a href="/" class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-arrow-left mr-2"></i>Go Back
+                        </a>
+                        <a href="/admin" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                            <i class="fas fa-cog mr-2"></i>Try Admin Panel
+                        </a>
+                    "#;
+                    
                     return Ok((
                         StatusCode::BAD_REQUEST,
-                        Html(format!(
-                            r#"
-                            <div class="alert alert-danger">
-                                <h4>Error!</h4>
-                                <p>Failed to process CSV: {}</p>
-                                <a href="/" class="btn btn-secondary">Go Back</a>
-                            </div>
-                            "#,
-                            e
+                        Html(templates::error_response(
+                            "CSV Processing Failed",
+                            &format!("We encountered an error while processing your CSV file: {}. Please check your file format and try again.", e),
+                            buttons
                         ))
                     ));
                 }
@@ -438,7 +462,27 @@ async fn generate_vouchers(
     } else {
         // Generate vouchers for default network (backward compatibility)
         let vouchers = manager.get_all_vouchers();
-        (state.wifi_ssid.clone(), state.wifi_password.clone(), "Default Network".to_string(), vouchers)
+        match (&state.default_wifi_ssid, &state.default_wifi_password) {
+            (Some(ssid), Some(password)) => {
+                (ssid.clone(), password.clone(), "Default Network".to_string(), vouchers)
+            }
+            _ => {
+                let buttons = r#"
+                    <a href="/admin" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        <i class="fas fa-cog mr-2"></i>Go to Admin Panel
+                    </a>
+                    <a href="/" class="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        <i class="fas fa-home mr-2"></i>Back to Home
+                    </a>
+                "#;
+                    
+                return Ok(Html(templates::error_response(
+                    "No Network Configuration",
+                    "No default network is configured and no specific network was selected. Please use the Admin Panel to create networks first, then generate vouchers for specific networks.",
+                    buttons
+                )).into_response());
+            }
+        }
     };
     
     if vouchers.is_empty() {

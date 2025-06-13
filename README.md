@@ -50,29 +50,39 @@ cargo build --release
 ### Command Line Options
 
 ```bash
+# With default WiFi network
 ./pfsense_portal_generator --ssid "YourWiFiNetwork" --password "YourWiFiPassword"
+
+# Without default WiFi network (admin panel only)
+./pfsense_portal_generator
 ```
 
 #### Available Options:
 
-- `--ssid, -s`: WiFi network name (SSID) - **Required** (creates default network)
-- `--password, -p`: WiFi network password - **Required** (for default network)
+- `--ssid, -s`: WiFi network name (SSID) - **Optional** (creates default network if provided)
+- `--password, -p`: WiFi network password - **Required if SSID is provided** (for default network)
 - `--port`: Port to run the web server on (default: 3000)
 - `--host`: Host to bind the web server to (default: 127.0.0.1)
 
-**Note**: The command line SSID/password creates a "Default Network" that appears in the admin panel. You can create additional networks through the web interface.
+**Note**: The command line SSID/password creates a "Default Network" that appears in the admin panel. You can create additional networks through the web interface. If no default network is provided, you must use the admin panel to create all networks.
 
 ### Example
 
 ```bash
-# Run with custom WiFi credentials
+# Run with custom WiFi credentials (creates default network)
 ./pfsense_portal_generator --ssid "Hotel-Guest-WiFi" --password "welcome123"
 
-# Run on a different port
+# Run without default network (admin panel only)
+./pfsense_portal_generator --port 3000
+
+# Run on a different port with default network
 ./pfsense_portal_generator --ssid "Cafe-WiFi" --password "coffee2024" --port 8080
 
 # Run accessible from other devices on the network
 ./pfsense_portal_generator --ssid "Event-WiFi" --password "conference2024" --host "0.0.0.0" --port 3000
+
+# Server deployment (no default network, accessible from network)
+./pfsense_portal_generator --host "0.0.0.0" --port 3000
 ```
 
 ## CSV Format
@@ -227,6 +237,17 @@ src/
 - Run on localhost by default for security
 - Admin panel allows network management but doesn't persist data between restarts
 - Each network's credentials are isolated and only used for their specific QR codes
+
+## Server Deployment
+
+For production server deployment, including reverse proxy setup, SSL configuration, and systemd service configuration, see the [Server Deployment Guide](SERVER_DEPLOYMENT.md).
+
+Key features for server deployment:
+- **No default network required**: Run without command line WiFi parameters
+- **Admin panel management**: Create and manage all networks through the web interface
+- **Reverse proxy compatible**: Works with Nginx, Apache, and other reverse proxies
+- **Systemd service**: Includes complete service configuration
+- **Security hardening**: Comprehensive security recommendations
 
 ## License
 
