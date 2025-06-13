@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Vouchers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-gray-900 text-white">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between h-16">
+                <a href="/" class="flex items-center font-semibold text-lg">
+                    <i class="fas fa-wifi mr-2"></i>WiFi Voucher Generator
+                </a>
+                <div class="flex space-x-4">
+                    <a href="/" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-home mr-1"></i>Home
+                    </a>
+                    <a href="/admin" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-700 transition-colors">
+                        <i class="fas fa-cog mr-1"></i>Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-list mr-2"></i>Network Vouchers
+            </h1>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="/admin" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 inline-flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Admin
+                </a>
+                <a href="/generate?network_id={{NETWORK_ID}}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 inline-flex items-center">
+                    <i class="fas fa-print mr-2"></i>Generate QR Codes
+                </a>
+            </div>
+        </div>
+
+        <!-- Network Info -->
+        {{NETWORK_INFO}}
+
+        <!-- Vouchers Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-gray-100 px-6 py-4 border-b">
+                <h5 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-ticket-alt mr-2"></i>Vouchers ({{VOUCHER_COUNT}} total)
+                </h5>
+            </div>
+            <div class="p-6">
+                {{EMPTY_VOUCHERS_MESSAGE}}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Voucher Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {{VOUCHER_ROWS}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,49 @@
+# Rust generated files
+/target/
+Cargo.lock
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+
+# Runtime generated files
+*.pid
+*.seed
+*.pid.lock
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+*.tmp
+*.temp
+/tmp/
+
+# Build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Generated voucher files (if any)
+generated_vouchers/
+voucher_output/

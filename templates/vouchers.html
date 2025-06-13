@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Vouchers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .voucher-card {
+                break-inside: avoid;
+                margin-bottom: 0.5rem;
+            }
+            body {
+                margin: 0;
+                padding: 0.5rem;
+            }
+            .print-container {
+                max-width: none;
+                padding: 0;
+            }
+        }
+        
+        @media print and (max-width: 8.5in) {
+            .voucher-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+        
+        .voucher-card {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header (no-print) -->
+    <div class="no-print bg-white shadow-sm border-b">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">
+                        <i class="fas fa-ticket-alt mr-2 text-blue-600"></i>WiFi Vouchers Generated
+                    </h1>
+                    <p class="text-gray-600 mt-1">
+                        Total: {{VOUCHER_COUNT}} vouchers for network "{{NETWORK_NAME}}" ({{NETWORK_SSID}})
+                    </p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="/" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Upload
+                    </a>
+                    <a href="/admin" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 inline-flex items-center">
+                        <i class="fas fa-cog mr-2"></i>Admin Panel
+                    </a>
+                    <button onclick="window.print()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 inline-flex items-center">
+                        <i class="fas fa-print mr-2"></i>Print Vouchers
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vouchers Container -->
+    <div class="container mx-auto px-6 py-6 print-container">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 voucher-grid">
+            {{VOUCHER_CARDS}}
+        </div>
+    </div>
+
+    <!-- Print Instructions (no-print) -->
+    <div class="no-print bg-blue-50 border-t border-blue-200 mt-8">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-start space-x-3">
+                <i class="fas fa-info-circle text-blue-600 mt-1"></i>
+                <div>
+                    <h3 class="font-semibold text-blue-900 mb-2">Printing Tips</h3>
+                    <ul class="text-sm text-blue-800 space-y-1">
+                        <li>• Use landscape orientation for better fit</li>
+                        <li>• Ensure "Print backgrounds" is enabled for proper styling</li>
+                        <li>• Adjust margins to "Minimum" for more vouchers per page</li>
+                        <li>• Consider using cardstock paper for durability</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
