@@ -51,21 +51,7 @@ struct AppState {
 
 #[derive(Deserialize)]
 struct GenerateQuery {
-    format: Option<String>,     // "html" or "pdf"
     network_id: Option<String>, // specific network ID
-}
-
-#[derive(Deserialize)]
-struct NetworkForm {
-    ssid: String,
-    password: String,
-    name: String,
-    description: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct VoucherUploadForm {
-    network_id: String,
 }
 
 #[tokio::main]
@@ -341,8 +327,7 @@ async fn upload_csv(
                     let mut manager = state.voucher_manager.write().await;
                     manager.add_vouchers(vouchers);
 
-                    let buttons = format!(
-                        r#"
+                    let buttons = r#"
                         <a href="/vouchers" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                             <i class="fas fa-list mr-2"></i>View Vouchers
                         </a>
@@ -352,8 +337,7 @@ async fn upload_csv(
                         <a href="/admin" class="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                             <i class="fas fa-cog mr-2"></i>Admin Panel
                         </a>
-                        "#
-                    );
+                        "#;
 
                     return Ok((
                         StatusCode::OK,
@@ -361,7 +345,7 @@ async fn upload_csv(
                             "CSV Uploaded Successfully!",
                             &format!("Your CSV file has been processed and {} voucher codes have been loaded into the system. You can now generate QR code vouchers for printing.", manager.voucher_count()),
                             manager.voucher_count(),
-                            &buttons
+                            buttons
                         ))
                     ));
                 }

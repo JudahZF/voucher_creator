@@ -1,6 +1,6 @@
-use qrcode::{QrCode, EcLevel, Color};
+use base64::{engine::general_purpose, Engine as _};
 use image::{ImageBuffer, Rgb, RgbImage};
-use base64::{Engine as _, engine::general_purpose};
+use qrcode::{Color, EcLevel, QrCode};
 use std::io::Cursor;
 
 #[derive(Clone)]
@@ -23,30 +23,14 @@ impl QrGenerator {
         let mut png_bytes = Vec::new();
         {
             let mut cursor = Cursor::new(&mut png_bytes);
-            image.write_to(&mut cursor, image::ImageOutputFormat::Png)
+            image
+                .write_to(&mut cursor, image::ImageOutputFormat::Png)
                 .map_err(|e| QrGeneratorError::ImageEncoding(e.to_string()))?;
         }
 
         // Encode as base64
         let base64_string = general_purpose::STANDARD.encode(&png_bytes);
         Ok(base64_string)
-    }
-
-    /// Generate a QR code and return it as PNG bytes
-    pub fn generate_qr_png(&self, data: &str) -> Result<Vec<u8>, QrGeneratorError> {
-        let qr_code = QrCode::with_error_correction_level(data, EcLevel::M)
-            .map_err(|e| QrGeneratorError::QrCodeGeneration(e.to_string()))?;
-
-        let image = self.qr_code_to_image(&qr_code)?;
-
-        let mut png_bytes = Vec::new();
-        {
-            let mut cursor = Cursor::new(&mut png_bytes);
-            image.write_to(&mut cursor, image::ImageOutputFormat::Png)
-                .map_err(|e| QrGeneratorError::ImageEncoding(e.to_string()))?;
-        }
-
-        Ok(png_bytes)
     }
 
     fn qr_code_to_image(&self, qr_code: &QrCode) -> Result<RgbImage, QrGeneratorError> {
@@ -69,7 +53,7 @@ impl QrGenerator {
         for (y, row) in modules.chunks(width).enumerate() {
             for (x, &module) in row.iter().enumerate() {
                 let color = match module {
-                    Color::Dark => Rgb([0, 0, 0]),    // Black for dark modules
+                    Color::Dark => Rgb([0, 0, 0]),        // Black for dark modules
                     Color::Light => Rgb([255, 255, 255]), // White for light modules
                 };
 
@@ -78,7 +62,7 @@ impl QrGenerator {
                     for dx in 0..scale {
                         let px = (x * scale + dx + border) as u32;
                         let py = (y * scale + dy + border) as u32;
-                        
+
                         if px < img_width as u32 && py < img_height as u32 {
                             image.put_pixel(px, py, color);
                         }
@@ -95,7 +79,7 @@ impl QrGenerator {
 pub enum QrGeneratorError {
     #[error("QR code generation failed: {0}")]
     QrCodeGeneration(String),
-    
+
     #[error("Image encoding failed: {0}")]
     ImageEncoding(String),
 }
@@ -109,10 +93,10 @@ mod tests {
         let generator = QrGenerator::new();
         let result = generator.generate_qr_base64("TEST");
         assert!(result.is_ok());
-        
+
         let base64 = result.unwrap();
         assert!(!base64.is_empty());
-        
+
         // Check that it's valid base64
         assert!(general_purpose::STANDARD.decode(&base64).is_ok());
     }
@@ -123,18 +107,5 @@ mod tests {
         let wifi_data = "WIFI:T:WPA;S:TestNetwork;P:password123;H:false;;";
         let result = generator.generate_qr_base64(wifi_data);
         assert!(result.is_ok());
-    }
-
-    #[test]
-    fn test_generate_qr_png() {
-        let generator = QrGenerator::new();
-        let result = generator.generate_qr_png("TEST");
-        assert!(result.is_ok());
-        
-        let png_bytes = result.unwrap();
-        assert!(!png_bytes.is_empty());
-        
-        // Check PNG signature
-        assert_eq!(&png_bytes[0..8], &[137, 80, 78, 71, 13, 10, 26, 10]);
     }
 }
