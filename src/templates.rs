@@ -1,5 +1,6 @@
-use crate::voucher::VoucherManager;
+use crate::database::VoucherCounts;
 use crate::wifi_network::WiFiNetwork;
+use crate::voucher::Voucher;
 use std::fs;
 
 // Load template files at compile time or runtime
@@ -7,10 +8,6 @@ fn load_template(name: &str) -> String {
     let template_path = format!("templates/{}.html", name);
     fs::read_to_string(&template_path)
         .unwrap_or_else(|_| panic!("Failed to load template: {}", template_path))
-}
-
-pub fn index_template() -> String {
-    load_template("index")
 }
 
 pub fn no_vouchers_template() -> String {
@@ -145,14 +142,15 @@ pub fn error_response(title: &str, message: &str, buttons: &str) -> String {
         .replace("{{REDIRECT_DELAY}}", "0")
 }
 
-pub fn admin_template(networks: &[&WiFiNetwork], voucher_manager: &VoucherManager) -> String {
+pub fn admin_template(networks: &[WiFiNetwork], voucher_counts: &[VoucherCounts]) -> String {
     let template = load_template("admin");
 
     let network_rows = networks
         .iter()
-        .map(|network| {
-            let voucher_count = voucher_manager.voucher_count_for_network(&network.id);
-            let unused_count = voucher_manager.unused_voucher_count_for_network(&network.id);
+        .zip(voucher_counts.iter())
+        .map(|(network, counts)| {
+            let voucher_count = counts.total;
+            let unused_count = counts.unused;
             let status_badge = if network.is_active {
                 r#"<span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200">
                     <i class="fas fa-check-circle mr-1"></i>Active
@@ -258,15 +256,16 @@ pub fn admin_template(networks: &[&WiFiNetwork], voucher_manager: &VoucherManage
     };
 
     template
+        .replace("{{NETWORK_ROWS}}", &network_rows)
         .replace("{{NETWORK_OPTIONS}}", &network_options)
         .replace("{{EMPTY_NETWORKS_MESSAGE}}", empty_networks_message)
-        .replace("{{NETWORK_ROWS}}", &network_rows)
 }
 
 pub fn network_vouchers_template(
     network: Option<&WiFiNetwork>,
-    vouchers: &[&crate::voucher::Voucher],
+    vouchers: &[Voucher],
     network_id: &str,
+    voucher_counts: &VoucherCounts,
 ) -> String {
     let template = load_template("network-vouchers");
 
@@ -419,6 +418,9 @@ pub fn network_vouchers_template(
         .replace("{{NETWORK_ID}}", network_id)
         .replace("{{NETWORK_INFO}}", &network_info)
         .replace("{{VOUCHER_COUNT}}", &vouchers.len().to_string())
-        .replace("{{EMPTY_VOUCHERS_MESSAGE}}", empty_vouchers_message)
         .replace("{{VOUCHER_ROWS}}", &voucher_rows)
+        .replace("{{EMPTY_VOUCHERS_MESSAGE}}", empty_vouchers_message)
+        .replace("{{TOTAL_COUNT}}", &voucher_counts.total.to_string())
+        .replace("{{USED_COUNT}}", &voucher_counts.used.to_string())
+        .replace("{{UNUSED_COUNT}}", &voucher_counts.unused.to_string())
 }

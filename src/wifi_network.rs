@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -24,43 +23,6 @@ impl WiFiNetwork {
             created_at: chrono::Utc::now(),
             is_active: true,
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct WiFiNetworkManager {
-    networks: HashMap<String, WiFiNetwork>,
-}
-
-impl WiFiNetworkManager {
-    pub fn new() -> Self {
-        Self {
-            networks: HashMap::new(),
-        }
-    }
-
-    pub fn add_network(&mut self, network: WiFiNetwork) {
-        self.networks.insert(network.id.clone(), network);
-    }
-
-    pub fn get_network(&self, id: &str) -> Option<&WiFiNetwork> {
-        self.networks.get(id)
-    }
-
-    pub fn get_all_networks(&self) -> Vec<&WiFiNetwork> {
-        let mut networks: Vec<&WiFiNetwork> = self.networks.values().collect();
-        networks.sort_by(|a, b| a.created_at.cmp(&b.created_at));
-        networks
-    }
-
-    pub fn remove_network(&mut self, id: &str) -> Option<WiFiNetwork> {
-        self.networks.remove(id)
-    }
-}
-
-impl Default for WiFiNetworkManager {
-    fn default() -> Self {
-        Self::new()
     }
 }
 

@@ -102,7 +102,7 @@
                     <div class="flex items-center space-x-3">
                         <a href="/generate?network_id={{NETWORK_ID}}" 
                            class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                            <i class="fas fa-print mr-2"></i>Generate Vouchers
+                            <i class="fas fa-print mr-2"></i>Print Vouchers
                         </a>
                         <a href="/admin" 
                            class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg">
@@ -162,7 +162,7 @@
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <i class="fas fa-ticket-alt text-2xl text-white"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">{{VOUCHER_COUNT}}</h3>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">{{TOTAL_COUNT}}</h3>
                 <p class="text-gray-600 font-medium">Total Vouchers</p>
             </div>
             
@@ -170,7 +170,7 @@
                 <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <i class="fas fa-check-circle text-2xl text-white"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2" id="availableCount">-</h3>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2" id="availableCount">{{UNUSED_COUNT}}</h3>
                 <p class="text-gray-600 font-medium">Available</p>
             </div>
             
@@ -178,7 +178,7 @@
                 <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <i class="fas fa-times-circle text-2xl text-white"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2" id="usedCount">-</h3>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2" id="usedCount">{{USED_COUNT}}</h3>
                 <p class="text-gray-600 font-medium">Used</p>
             </div>
         </div>

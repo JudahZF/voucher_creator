@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,74 +21,6 @@ impl Voucher {
             is_used: false,
             used_at: None,
         }
-    }
-}
-
-#[derive(Debug)]
-pub struct VoucherManager {
-    vouchers: HashMap<String, Voucher>,
-}
-
-impl VoucherManager {
-    pub fn new() -> Self {
-        Self {
-            vouchers: HashMap::new(),
-        }
-    }
-
-    pub fn add_voucher(&mut self, voucher: Voucher) {
-        self.vouchers.insert(voucher.id.clone(), voucher);
-    }
-
-    pub fn add_vouchers(&mut self, vouchers: Vec<Voucher>) {
-        for voucher in vouchers {
-            self.add_voucher(voucher);
-        }
-    }
-
-    pub fn get_all_vouchers(&self) -> Vec<&Voucher> {
-        let mut vouchers: Vec<&Voucher> = self.vouchers.values().collect();
-        vouchers.sort_by(|a, b| a.created_at.cmp(&b.created_at));
-        vouchers
-    }
-
-    pub fn voucher_count(&self) -> usize {
-        self.vouchers.len()
-    }
-
-    pub fn get_vouchers_for_network(&self, network_id: &str) -> Vec<&Voucher> {
-        let mut vouchers: Vec<&Voucher> = self
-            .vouchers
-            .values()
-            .filter(|v| v.network_id.as_deref() == Some(network_id))
-            .collect();
-        vouchers.sort_by(|a, b| a.created_at.cmp(&b.created_at));
-        vouchers
-    }
-
-    pub fn remove_vouchers_for_network(&mut self, network_id: &str) {
-        self.vouchers
-            .retain(|_, v| v.network_id.as_deref() != Some(network_id));
-    }
-
-    pub fn voucher_count_for_network(&self, network_id: &str) -> usize {
-        self.vouchers
-            .values()
-            .filter(|v| v.network_id.as_deref() == Some(network_id))
-            .count()
-    }
-
-    pub fn unused_voucher_count_for_network(&self, network_id: &str) -> usize {
-        self.vouchers
-            .values()
-            .filter(|v| v.network_id.as_deref() == Some(network_id) && !v.is_used)
-            .count()
-    }
-}
-
-impl Default for VoucherManager {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
