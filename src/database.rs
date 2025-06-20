@@ -45,8 +45,6 @@ impl Database {
                 created_at TEXT NOT NULL,
                 is_used BOOLEAN NOT NULL DEFAULT FALSE,
                 used_at TEXT,
-                is_printed BOOLEAN NOT NULL DEFAULT FALSE,
-                printed_at TEXT,
                 FOREIGN KEY (network_id) REFERENCES wifi_networks (id) ON DELETE CASCADE
             )
             "#,
@@ -54,13 +52,7 @@ impl Database {
         .execute(&self.pool)
         .await?;
 
-        // Add new columns if they don't exist (for existing databases)
-        let _ = sqlx::query("ALTER TABLE vouchers ADD COLUMN is_printed BOOLEAN NOT NULL DEFAULT FALSE")
-            .execute(&self.pool)
-            .await;
-        let _ = sqlx::query("ALTER TABLE vouchers ADD COLUMN printed_at TEXT")
-            .execute(&self.pool)
-            .await;
+        // No need to add columns for existing databases since we've removed the columns
 
         // Create indexes for better performance
         sqlx::query("CREATE INDEX IF NOT EXISTS idx_vouchers_network_id ON vouchers(network_id)")
@@ -71,9 +63,7 @@ impl Database {
             .execute(&self.pool)
             .await?;
 
-        sqlx::query("CREATE INDEX IF NOT EXISTS idx_vouchers_is_printed ON vouchers(is_printed)")
-            .execute(&self.pool)
-            .await?;
+        // Removed is_printed index since we no longer have this column
 
         Ok(())
     }
@@ -166,8 +156,8 @@ impl Database {
         for voucher in vouchers {
             sqlx::query(
                 r#"
-                INSERT INTO vouchers (id, code, network_id, created_at, is_used, used_at, is_printed, printed_at)
-                VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+                INSERT INTO vouchers (id, code, network_id, created_at, is_used, used_at)
+                VALUES (?1, ?2, ?3, ?4, ?5, ?6)
                 "#,
             )
             .bind(&voucher.id)
@@ -176,8 +166,6 @@ impl Database {
             .bind(voucher.created_at.to_rfc3339())
             .bind(voucher.is_used)
             .bind(voucher.used_at.map(|dt| dt.to_rfc3339()))
-            .bind(voucher.is_printed)
-            .bind(voucher.printed_at.map(|dt| dt.to_rfc3339()))
             .execute(&mut *tx)
             .await?;
         }
@@ -188,7 +176,7 @@ impl Database {
 
     pub async fn get_all_vouchers(&self) -> Result<Vec<Voucher>> {
         let rows = sqlx::query(
-            "SELECT id, code, network_id, created_at, is_used, used_at, is_printed, printed_at FROM vouchers ORDER BY created_at ASC"
+            "SELECT id, code, network_id, created_at, is_used, used_at FROM vouchers ORDER BY created_at ASC"
         )
         .fetch_all(&self.pool)
         .await?;
@@ -211,15 +199,7 @@ impl Database {
                             .map(|dt| dt.with_timezone(&chrono::Utc))
                     })
                     .transpose()?,
-                is_printed: row.try_get("is_printed").unwrap_or(false),
-                printed_at: row
-                    .try_get::<Option<String>, _>("printed_at")
-                    .unwrap_or(None)
-                    .map(|s| {
-                        chrono::DateTime::parse_from_rfc3339(&s)
-                            .map(|dt| dt.with_timezone(&chrono::Utc))
-                    })
-                    .transpose()?,
+                // Fields is_printed and printed_at removed as they're now combined with is_used/used_at
             });
         }
 
@@ -228,7 +208,7 @@ impl Database {
 
     pub async fn get_vouchers_for_network(&self, network_id: &str) -> Result<Vec<Voucher>> {
         let rows = sqlx::query(
-            "SELECT id, code, network_id, created_at, is_used, used_at, is_printed, printed_at FROM vouchers WHERE network_id = ?1 ORDER BY created_at ASC"
+            "SELECT id, code, network_id, created_at, is_used, used_at FROM vouchers WHERE network_id = ?1 ORDER BY created_at ASC"
         )
         .bind(network_id)
         .fetch_all(&self.pool)
@@ -252,15 +232,7 @@ impl Database {
                             .map(|dt| dt.with_timezone(&chrono::Utc))
                     })
                     .transpose()?,
-                is_printed: row.try_get("is_printed").unwrap_or(false),
-                printed_at: row
-                    .try_get::<Option<String>, _>("printed_at")
-                    .unwrap_or(None)
-                    .map(|s| {
-                        chrono::DateTime::parse_from_rfc3339(&s)
-                            .map(|dt| dt.with_timezone(&chrono::Utc))
-                    })
-                    .transpose()?,
+                // Fields is_printed and printed_at removed as they're now combined with is_used/used_at
             });
         }
 
@@ -290,14 +262,14 @@ impl Database {
         Ok(result.rows_affected() > 0)
     }
 
-    pub async fn mark_vouchers_as_printed(&self, voucher_ids: &[String]) -> Result<usize> {
+    pub async fn mark_vouchers_as_used(&self, voucher_ids: &[String]) -> Result<usize> {
         let mut tx = self.pool.begin().await?;
         let now = chrono::Utc::now().to_rfc3339();
         let mut count = 0;
 
         for voucher_id in voucher_ids {
             let result = sqlx::query(
-                "UPDATE vouchers SET is_printed = TRUE, printed_at = ?1 WHERE id = ?2 AND is_printed = FALSE",
+                "UPDATE vouchers SET is_used = TRUE, used_at = ?1 WHERE id = ?2 AND is_used = FALSE",
             )
             .bind(&now)
             .bind(voucher_id)
@@ -311,14 +283,14 @@ impl Database {
         Ok(count)
     }
 
-    pub async fn get_unprinted_vouchers_for_network(&self, network_id: &str, limit: Option<usize>) -> Result<Vec<Voucher>> {
+    pub async fn get_unused_vouchers_for_network(&self, network_id: &str, limit: Option<usize>) -> Result<Vec<Voucher>> {
         let query = if let Some(limit) = limit {
             format!(
-                "SELECT id, code, network_id, created_at, is_used, used_at, is_printed, printed_at FROM vouchers WHERE network_id = ?1 AND is_printed = FALSE ORDER BY created_at ASC LIMIT {}",
+                "SELECT id, code, network_id, created_at, is_used, used_at FROM vouchers WHERE network_id = ?1 AND is_used = FALSE ORDER BY created_at ASC LIMIT {}",
                 limit
             )
         } else {
-            "SELECT id, code, network_id, created_at, is_used, used_at, is_printed, printed_at FROM vouchers WHERE network_id = ?1 AND is_printed = FALSE ORDER BY created_at ASC".to_string()
+            "SELECT id, code, network_id, created_at, is_used, used_at FROM vouchers WHERE network_id = ?1 AND is_used = FALSE ORDER BY created_at ASC".to_string()
         };
 
         let rows = sqlx::query(&query)
@@ -344,15 +316,7 @@ impl Database {
                             .map(|dt| dt.with_timezone(&chrono::Utc))
                     })
                     .transpose()?,
-                is_printed: row.try_get("is_printed").unwrap_or(false),
-                printed_at: row
-                    .try_get::<Option<String>, _>("printed_at")
-                    .unwrap_or(None)
-                    .map(|s| {
-                        chrono::DateTime::parse_from_rfc3339(&s)
-                            .map(|dt| dt.with_timezone(&chrono::Utc))
-                    })
-                    .transpose()?,
+                // Fields is_printed and printed_at removed as they're now combined with is_used/used_at
             });
         }
 
@@ -365,9 +329,7 @@ impl Database {
             SELECT
                 COUNT(*) as total,
                 COUNT(CASE WHEN is_used = TRUE THEN 1 END) as used,
-                COUNT(CASE WHEN is_used = FALSE THEN 1 END) as unused,
-                COUNT(CASE WHEN is_printed = TRUE THEN 1 END) as printed,
-                COUNT(CASE WHEN is_printed = FALSE THEN 1 END) as unprinted
+                COUNT(CASE WHEN is_used = FALSE THEN 1 END) as unused
             FROM vouchers
             WHERE network_id = ?1
             "#,
@@ -380,8 +342,6 @@ impl Database {
             total: row.get::<i64, _>("total") as usize,
             used: row.get::<i64, _>("used") as usize,
             unused: row.get::<i64, _>("unused") as usize,
-            printed: row.get::<i64, _>("printed") as usize,
-            unprinted: row.get::<i64, _>("unprinted") as usize,
         })
     }
 }
@@ -391,6 +351,4 @@ pub struct VoucherCounts {
     pub total: usize,
     pub used: usize,
     pub unused: usize,
-    pub printed: usize,
-    pub unprinted: usize,
 }

@@ -1,40 +1,48 @@
-<div
-    class="bg-white border-2 border-blue-500 rounded-lg shadow-md p-4 mb-4 voucher-card"
-    style="page-break-inside: avoid"
->
-    <div class="flex items-center justify-between h-32">
+<div class="bg-white border-2 border-blue-500 rounded-xl shadow-lg p-6 mb-4 voucher-card hover:shadow-xl transition-all duration-300" style="page-break-inside: avoid">
+    <div class="flex items-start justify-between gap-4">
         <!-- Left side - Text information -->
-        <div class="flex-1 pr-4">
-            <h3 class="text-lg font-bold text-gray-800 mb-2">
-                WiFi Access Voucher
-            </h3>
-            <div class="space-y-1">
-                <div class="text-sm">
-                    <span class="font-medium text-gray-700">Network:</span>
-                    <span class="text-gray-600">{{NETWORK_NAME}}</span>
+        <div class="flex-1 space-y-3">
+            <div class="border-b border-gray-200 pb-2 mb-3">
+                <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-wifi text-blue-500 mr-2"></i>
+                    WiFi Access Voucher
+                </h3>
+                <p class="text-sm text-gray-500 mt-1">Connect to WiFi Network</p>
+            </div>
+            
+            <div class="space-y-2">
+                <div class="flex items-center">
+                    <span class="text-sm font-semibold text-gray-700 w-20">Network:</span>
+                    <span class="text-sm text-gray-900 font-medium">{{NETWORK_NAME}}</span>
                 </div>
-                <div class="text-sm">
-                    <span class="font-medium text-gray-700">Voucher Code:</span>
+                
+                <div class="space-y-1">
+                    <span class="text-sm font-semibold text-gray-700">Access Code:</span>
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 px-3 py-2 rounded-lg">
+                        <span class="text-lg font-mono font-bold text-gray-800 tracking-wider break-all">
+                            {{VOUCHER_CODE}}
+                        </span>
+                    </div>
                 </div>
-                <div
-                    class="bg-gray-100 px-2 py-1 rounded text-xs font-mono font-bold text-gray-800 break-all"
-                >
-                    {{VOUCHER_CODE}}
-                </div>
-                <div class="text-xs text-gray-500 mt-1">
-                    Scan QR code to connect
-                </div>
+            </div>
+            
+            <div class="flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+                <i class="fas fa-qrcode mr-2"></i>
+                <span>Scan QR code or enter code manually</span>
             </div>
         </div>
 
         <!-- Right side - QR Code -->
         <div class="flex-shrink-0">
-            <div class="w-24 h-24 border border-gray-300 rounded p-1 bg-white">
+            <div class="bg-white border-2 border-gray-200 rounded-xl p-2 shadow-sm">
                 <img
                     src="data:image/png;base64,{{QR_CODE_BASE64}}"
-                    alt="WiFi QR Code"
-                    class="w-full h-full object-contain"
+                    alt="WiFi QR Code for {{NETWORK_NAME}}"
+                    class="w-28 h-28 object-contain"
                 />
+                <div class="text-center mt-1">
+                    <span class="text-xs text-gray-500 font-medium">QR Code</span>
+                </div>
             </div>
         </div>
     </div>

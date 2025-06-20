@@ -48,3 +48,9 @@ sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "sqlite", "chrono"
 
 # Random number generation
 rand = "0.8"
+
+# Configuration file parsing
+toml = "0.8"
+
+# Testing
+tempfile = "3.10"

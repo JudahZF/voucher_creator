@@ -3,28 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>No Vouchers Found</title>
+    <title>No Vouchers Found - WiFi Voucher Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-gentle': 'bounce 2s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
-    <div class="container mx-auto px-6">
-        <div class="max-w-md mx-auto">
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div class="p-8 text-center">
-                    <i class="fas fa-exclamation-triangle text-6xl text-yellow-500 mb-6"></i>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">No Vouchers Found</h2>
-                    <p class="text-gray-600 mb-6">
-                        You haven't uploaded any voucher codes yet. Please upload a CSV file with your voucher codes to get started.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="/" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200">
-                            <i class="fas fa-upload mr-2"></i>Upload CSV File
+<body class="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-wifi text-white"></i>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <h1 class="text-xl font-bold text-gray-800">WiFi Voucher Generator</h1>
+                        <p class="text-sm text-gray-500">No Vouchers Found</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="flex items-center px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200">
+                        <i class="fas fa-home mr-2"></i>
+                        <span class="hidden sm:inline">Home</span>
+                    </a>
+                    <a href="/admin" class="flex items-center px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-all duration-200">
+                        <i class="fas fa-cog mr-2"></i>
+                        <span class="hidden sm:inline">Admin</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-16 flex items-center justify-center min-h-screen">
+        <div class="max-w-2xl mx-auto">
+            <!-- Main Empty State Card -->
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-200 animate-fade-in">
+                <!-- Header Section -->
+                <div class="bg-gradient-to-r from-orange-500 to-red-500 p-8 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                    <div class="relative z-10 text-center">
+                        <div class="mb-6">
+                            <div class="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-bounce-gentle">
+                                <i class="fas fa-ticket-alt text-4xl text-white"></i>
+                            </div>
+                        </div>
+                        <h1 class="text-3xl font-bold text-white mb-3">No Vouchers Found</h1>
+                        <p class="text-lg text-orange-100 leading-relaxed">Let's get you started with creating vouchers</p>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div class="p-8">
+                    <!-- Message -->
+                    <div class="text-center mb-8">
+                        <div class="bg-orange-50 rounded-2xl p-6 border border-orange-200">
+                            <div class="flex items-start justify-center">
+                                <i class="fas fa-info-circle text-orange-500 mr-3 mt-1 text-xl"></i>
+                                <div class="text-left">
+                                    <h3 class="font-bold text-orange-800 text-lg mb-2">Getting Started</h3>
+                                    <p class="text-orange-700">
+                                        You haven't uploaded any voucher codes yet. To create WiFi vouchers, you'll need to:
+                                    </p>
+                                    <ol class="text-orange-700 mt-3 space-y-1 list-decimal list-inside">
+                                        <li>Create or select a WiFi network</li>
+                                        <li>Upload a CSV file with voucher codes</li>
+                                        <li>Generate and print your vouchers</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                        <a href="/admin" class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl inline-flex items-center justify-center">
+                            <i class="fas fa-plus mr-3"></i>Create Network & Upload
                         </a>
+                        <a href="/" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-md hover:shadow-lg inline-flex items-center justify-center">
+                            <i class="fas fa-home mr-3"></i>Back to Home
+                        </a>
+                    </div>
+
+                    <!-- CSV Format Guide -->
+                    <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+                        <h4 class="font-bold text-blue-800 text-lg mb-3 flex items-center">
+                            <i class="fas fa-file-csv mr-2"></i>CSV Format Guide
+                        </h4>
+                        <div class="text-blue-700 space-y-2">
+                            <p>Your CSV file should contain voucher codes in the first column:</p>
+                            <div class="bg-white rounded-lg p-3 font-mono text-sm border border-blue-300 mt-3">
+                                <div class="text-gray-500"># This is a comment line</div>
+                                <div class="text-gray-800">VOUCHER001</div>
+                                <div class="text-gray-800">VOUCHER002</div>
+                                <div class="text-gray-800">VOUCHER003</div>
+                                <div class="text-gray-500"># Comments are ignored</div>
+                                <div class="text-gray-800">VOUCHER004</div>
+                            </div>
+                            <p class="text-sm text-blue-600 mt-2">
+                                <i class="fas fa-lightbulb mr-1"></i>
+                                <strong>Tip:</strong> Lines starting with # are treated as comments and will be ignored.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="bg-white py-8 border-t border-gray-200">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p class="text-gray-600 flex items-center">
+                        <i class="fas fa-wifi mr-2"></i>WiFi Voucher Generator
+                    </p>
+                </div>
+                <div>
+                    <p class="text-gray-600 flex items-center">
+                        <i class="fas fa-code mr-2"></i>Built with Rust & Axum
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth animations on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.animate-fade-in, .animate-slide-up');
+            elements.forEach((el, index) => {
+                el.style.animationDelay = `${index * 100}ms`;
+            });
+        });
+    </script>
 </body>
 </html>

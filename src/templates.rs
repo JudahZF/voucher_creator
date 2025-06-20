@@ -5,7 +5,12 @@ use std::fs;
 
 // Load template files at compile time or runtime
 fn load_template(name: &str) -> String {
-    let template_path = format!("templates/{}.html", name);
+    let templates_dir = match crate::config::Config::load() {
+        Ok(config) => config.templates_dir,
+        Err(_) => "templates".to_string(), // Fallback to default if config can't be loaded
+    };
+    
+    let template_path = format!("{}/{}.html", templates_dir, name);
     fs::read_to_string(&template_path)
         .unwrap_or_else(|_| panic!("Failed to load template: {}", template_path))
 }
@@ -423,8 +428,8 @@ pub fn network_vouchers_template(
         .replace("{{TOTAL_COUNT}}", &voucher_counts.total.to_string())
         .replace("{{USED_COUNT}}", &voucher_counts.used.to_string())
         .replace("{{UNUSED_COUNT}}", &voucher_counts.unused.to_string())
-        .replace("{{PRINTED_COUNT}}", &voucher_counts.printed.to_string())
-        .replace("{{UNPRINTED_COUNT}}", &voucher_counts.unprinted.to_string())
+        .replace("{{PRINTED_COUNT}}", &voucher_counts.used.to_string())
+        .replace("{{UNPRINTED_COUNT}}", &voucher_counts.unused.to_string())
 }
 
 pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCounts) -> String {
@@ -456,7 +461,7 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <div class="text-2xl font-bold text-green-800">{}</div>
-                                            <div class="text-sm text-green-600">Available to Print</div>
+                                            <div class="text-sm text-green-600">Available to Use</div>
                                         </div>
                                         <i class="fas fa-print text-2xl text-green-400"></i>
                                     </div>
@@ -465,7 +470,7 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                                     <div class="flex items-center justify-between">
                                         <div>
                                             <div class="text-2xl font-bold text-blue-800">{}</div>
-                                            <div class="text-sm text-blue-600">Already Printed</div>
+                                            <div class="text-sm text-blue-600">Already Used</div>
                                         </div>
                                         <i class="fas fa-check text-2xl text-blue-400"></i>
                                     </div>
@@ -477,7 +482,7 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                                 
                                 <div>
                                     <label for="count" class="block text-sm font-bold text-gray-700 mb-3">
-                                        <i class="fas fa-hashtag mr-2"></i>Number of vouchers to print
+                                        <i class="fas fa-hashtag mr-2"></i>Number of vouchers to use
                                     </label>
                                     <input type="number" 
                                            id="count" 
@@ -489,7 +494,7 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                                            required>
                                     <p class="mt-2 text-sm text-gray-600">
                                         <i class="fas fa-info-circle mr-1"></i>
-                                        Enter a number between 1 and {} (available vouchers)
+                                        Enter a number between 1 and {} (unused vouchers)
                                     </p>
                                 </div>
 
@@ -499,8 +504,8 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                                         <div>
                                             <h4 class="font-bold text-amber-800 mb-2">Important Note</h4>
                                             <p class="text-amber-700 text-sm">
-                                                Once vouchers are printed, they will be marked as "printed" and won't appear in future print requests. 
-                                                This ensures each voucher code is only printed once.
+                                                Once vouchers are used, they will be marked as "used" and won't appear in future requests. 
+                                                This ensures each voucher code is only used once.
                                             </p>
                                         </div>
                                     </div>
@@ -509,7 +514,7 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                                 <div class="flex space-x-4">
                                     <button type="submit" 
                                             class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                                        <i class="fas fa-print mr-2"></i>Print Vouchers
+                                        <i class="fas fa-print mr-2"></i>Use Vouchers
                                     </button>
                                     <a href="/admin" 
                                        class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-4 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-center">
@@ -526,15 +531,15 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
         "#,
         network.name,
         network.name,
-        voucher_counts.unprinted,
-        voucher_counts.printed,
+        voucher_counts.unused,
+        voucher_counts.used,
         network.id,
-        voucher_counts.unprinted,
-        voucher_counts.unprinted
+        voucher_counts.unused,
+        voucher_counts.unused
     )
 }
 
-pub fn no_unprinted_vouchers_template() -> String {
+pub fn no_unused_vouchers_template() -> String {
     format!(
         r#"
         <!DOCTYPE html>
@@ -560,10 +565,10 @@ pub fn no_unprinted_vouchers_template() -> String {
                         <div class="p-8 text-center">
                             <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 border border-amber-200">
                                 <i class="fas fa-print text-6xl text-amber-400 mb-6"></i>
-                                <h3 class="text-2xl font-bold text-gray-800 mb-4">All Vouchers Printed</h3>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-4">All Vouchers Used</h3>
                                 <p class="text-gray-600 mb-6">
-                                    There are no unprinted voucher codes remaining for this network. 
-                                    All available vouchers have already been printed and marked as used.
+                                    There are no unused voucher codes remaining for this network. 
+                                    All available vouchers have already been used.
                                 </p>
                                 <div class="space-y-3">
                                     <a href="/admin" 

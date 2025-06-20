@@ -1,0 +1,14 @@
+# WiFi Voucher Generator Configuration
+
+# Path to the templates directory (relative to project root)
+templates_dir = "templates"
+
+# Path for the database file (relative to project root)
+# Both directory and filename can be configured
+database_path = "vouchers.db"
+
+# Server configuration
+[server]
+# Default host and port values that can be overridden by command line arguments
+default_host = "127.0.0.1"
+default_port = 3000

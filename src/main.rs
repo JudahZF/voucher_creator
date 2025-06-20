@@ -5,11 +5,13 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use config::Config;
 use clap::Parser;
 use serde::Deserialize;
 use std::{collections::HashMap, env, net::SocketAddr, sync::Arc};
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
+mod config;
 mod database;
 mod qr_generator;
 mod templates;
@@ -24,11 +26,11 @@ use wifi_network::WiFiNetwork;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(long, default_value = "3000")]
-    port: u16,
+    #[arg(long)]
+    port: Option<u16>,
 
-    #[arg(long, default_value = "127.0.0.1")]
-    host: String,
+    #[arg(long)]
+    host: Option<String>,
 }
 
 #[derive(Clone)]
@@ -44,16 +46,28 @@ struct GenerateQuery {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Load configuration from config.toml
+    let config = Config::load()?;
+    
+    // Ensure that configured directories exist
+    config.ensure_directories_exist()?;
+    
+    // Parse command line arguments
     let args = Args::parse();
 
-    println!("Starting WiFi Voucher Generator");
-    println!("Server: http://{}:{}", args.host, args.port);
+    // Use command line args if provided, otherwise use config defaults
+    let host = args.host.unwrap_or_else(|| config.server.default_host.clone());
+    let port = args.port.unwrap_or(config.server.default_port);
 
-    // Initialize database
-    let db_path = env::current_dir()?.join("vouchers.db");
-    let database_url = format!("sqlite:{}", db_path.display());
+    println!("Starting WiFi Voucher Generator");
+    println!("Server: http://{}:{}", host, port);
+    println!("Using templates directory: {}", config.templates_dir);
+    println!("Using database path: {}", config.database_path);
+
+    // Initialize database using configured path
+    let database_url = config.database_url()?;
     let database = Arc::new(Database::new(&database_url).await?);
-    println!("Database initialized at: {}", db_path.display());
+    println!("Database initialized at: {}", config.database_path);
 
     // Initialize application state
     let state = AppState {
@@ -77,11 +91,11 @@ async fn main() -> anyhow::Result<()> {
         .route("/admin/networks/:id/vouchers", get(network_vouchers))
         .route("/vouchers/:id/use", post(mark_voucher_used))
         .route("/vouchers/:id/unuse", post(mark_voucher_unused))
-        .nest_service("/static", ServeDir::new("static"))
+        .nest_service("/static", ServeDir::new(&config.templates_dir))
         .layer(CorsLayer::permissive())
         .with_state(state);
 
-    let addr = format!("{}:{}", args.host, args.port)
+    let addr = format!("{}:{}", host, port)
         .parse::<SocketAddr>()
         .expect("Invalid address");
 
@@ -168,8 +182,6 @@ async fn admin_page(State(state): State<AppState>) -> Html<String> {
                 total: 0,
                 used: 0,
                 unused: 0,
-                printed: 0,
-                unprinted: 0,
             });
         network_counts.push(counts);
     }
@@ -302,8 +314,6 @@ async fn network_vouchers(
             total: 0,
             used: 0,
             unused: 0,
-            printed: 0,
-            unprinted: 0,
         });
 
     Html(templates::network_vouchers_template(
@@ -526,8 +536,6 @@ async fn generate_vouchers(
             total: 0,
             used: 0,
             unused: 0,
-            printed: 0,
-            unprinted: 0,
         });
 
     if voucher_counts.total == 0 {
@@ -578,17 +586,17 @@ async fn print_vouchers(
     // Get unprinted vouchers up to the requested count
     let vouchers = state
         .database
-        .get_unprinted_vouchers_for_network(&network_id, Some(count))
+        .get_unused_vouchers_for_network(&network_id, Some(count))
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     if vouchers.is_empty() {
-        return Ok(Html(templates::no_unprinted_vouchers_template()).into_response());
+        return Ok(Html(templates::no_unused_vouchers_template()).into_response());
     }
 
-    // Mark these vouchers as printed
+    // Mark these vouchers as used
     let voucher_ids: Vec<String> = vouchers.iter().map(|v| v.id.clone()).collect();
-    let _ = state.database.mark_vouchers_as_printed(&voucher_ids).await;
+    let _ = state.database.mark_vouchers_as_used(&voucher_ids).await;
 
     // Generate WiFi QR code
     let wifi_qr_data = format!(
