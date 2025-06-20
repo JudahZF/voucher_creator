@@ -423,4 +423,161 @@ pub fn network_vouchers_template(
         .replace("{{TOTAL_COUNT}}", &voucher_counts.total.to_string())
         .replace("{{USED_COUNT}}", &voucher_counts.used.to_string())
         .replace("{{UNUSED_COUNT}}", &voucher_counts.unused.to_string())
+        .replace("{{PRINTED_COUNT}}", &voucher_counts.printed.to_string())
+        .replace("{{UNPRINTED_COUNT}}", &voucher_counts.unprinted.to_string())
+}
+
+pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCounts) -> String {
+    format!(
+        r#"
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Print Vouchers - {}</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        </head>
+        <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+            <div class="container mx-auto px-4 py-8">
+                <div class="max-w-2xl mx-auto">
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+                        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 p-8">
+                            <h1 class="text-3xl font-bold text-white mb-2">
+                                <i class="fas fa-print mr-3"></i>Print Vouchers
+                            </h1>
+                            <p class="text-blue-100">Select how many voucher codes to print for {}</p>
+                        </div>
+                        
+                        <div class="p-8">
+                            <div class="grid grid-cols-2 gap-4 mb-8">
+                                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-2xl font-bold text-green-800">{}</div>
+                                            <div class="text-sm text-green-600">Available to Print</div>
+                                        </div>
+                                        <i class="fas fa-print text-2xl text-green-400"></i>
+                                    </div>
+                                </div>
+                                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <div class="text-2xl font-bold text-blue-800">{}</div>
+                                            <div class="text-sm text-blue-600">Already Printed</div>
+                                        </div>
+                                        <i class="fas fa-check text-2xl text-blue-400"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <form action="/print" method="post" enctype="multipart/form-data" class="space-y-6">
+                                <input type="hidden" name="network_id" value="{}">
+                                
+                                <div>
+                                    <label for="count" class="block text-sm font-bold text-gray-700 mb-3">
+                                        <i class="fas fa-hashtag mr-2"></i>Number of vouchers to print
+                                    </label>
+                                    <input type="number" 
+                                           id="count" 
+                                           name="count" 
+                                           min="1" 
+                                           max="{}" 
+                                           value="1"
+                                           class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-semibold"
+                                           required>
+                                    <p class="mt-2 text-sm text-gray-600">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Enter a number between 1 and {} (available vouchers)
+                                    </p>
+                                </div>
+
+                                <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-6 border border-amber-200">
+                                    <div class="flex items-start space-x-3">
+                                        <i class="fas fa-exclamation-triangle text-amber-600 mt-1"></i>
+                                        <div>
+                                            <h4 class="font-bold text-amber-800 mb-2">Important Note</h4>
+                                            <p class="text-amber-700 text-sm">
+                                                Once vouchers are printed, they will be marked as "printed" and won't appear in future print requests. 
+                                                This ensures each voucher code is only printed once.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex space-x-4">
+                                    <button type="submit" 
+                                            class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                        <i class="fas fa-print mr-2"></i>Print Vouchers
+                                    </button>
+                                    <a href="/admin" 
+                                       class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-4 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-center">
+                                        <i class="fas fa-arrow-left mr-2"></i>Cancel
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        "#,
+        network.name,
+        network.name,
+        voucher_counts.unprinted,
+        voucher_counts.printed,
+        network.id,
+        voucher_counts.unprinted,
+        voucher_counts.unprinted
+    )
+}
+
+pub fn no_unprinted_vouchers_template() -> String {
+    format!(
+        r#"
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>No Vouchers Available</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+        </head>
+        <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+            <div class="container mx-auto px-4 py-8">
+                <div class="max-w-2xl mx-auto">
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-200">
+                        <div class="bg-gradient-to-r from-amber-500 to-orange-600 p-8">
+                            <h1 class="text-3xl font-bold text-white mb-2">
+                                <i class="fas fa-exclamation-triangle mr-3"></i>No Vouchers Available
+                            </h1>
+                            <p class="text-amber-100">All vouchers for this network have already been printed</p>
+                        </div>
+                        
+                        <div class="p-8 text-center">
+                            <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 border border-amber-200">
+                                <i class="fas fa-print text-6xl text-amber-400 mb-6"></i>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-4">All Vouchers Printed</h3>
+                                <p class="text-gray-600 mb-6">
+                                    There are no unprinted voucher codes remaining for this network. 
+                                    All available vouchers have already been printed and marked as used.
+                                </p>
+                                <div class="space-y-3">
+                                    <a href="/admin" 
+                                       class="inline-block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                                        <i class="fas fa-arrow-left mr-2"></i>Back to Admin
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        "#
+    )
 }

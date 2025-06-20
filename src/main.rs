@@ -68,6 +68,7 @@ async fn main() -> anyhow::Result<()> {
         )
         .route("/upload", post(upload_csv))
         .route("/generate", get(generate_vouchers))
+        .route("/print", post(print_vouchers))
         .route("/vouchers", get(list_vouchers))
         .route("/admin", get(admin_page))
         .route("/admin/networks", post(create_network))
@@ -167,6 +168,8 @@ async fn admin_page(State(state): State<AppState>) -> Html<String> {
                 total: 0,
                 used: 0,
                 unused: 0,
+                printed: 0,
+                unprinted: 0,
             });
         network_counts.push(counts);
     }
@@ -299,6 +302,8 @@ async fn network_vouchers(
             total: 0,
             used: 0,
             unused: 0,
+            printed: 0,
+            unprinted: 0,
         });
 
     Html(templates::network_vouchers_template(
@@ -504,22 +509,86 @@ async fn generate_vouchers(
         None => return Err(StatusCode::PARTIAL_CONTENT),
     };
 
-    // Get network and vouchers from database
+    // Get network from database
     let network = state
         .database
         .get_network(network_id)
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::NOT_FOUND)?;
+    
+    // Get voucher counts for display
+    let voucher_counts = state
+        .database
+        .get_voucher_counts(network_id)
+        .await
+        .unwrap_or(database::VoucherCounts {
+            total: 0,
+            used: 0,
+            unused: 0,
+            printed: 0,
+            unprinted: 0,
+        });
+
+    if voucher_counts.total == 0 {
+        return Ok(Html(templates::no_vouchers_template()).into_response());
+    }
+
+    // Return print selection page
+    let html_content = templates::print_selection_page(&network, &voucher_counts);
+    Ok(Html(html_content).into_response())
+}
+
+async fn print_vouchers(
+    State(state): State<AppState>,
+    mut multipart: Multipart,
+) -> Result<impl IntoResponse, StatusCode> {
+    let mut network_id = String::new();
+    let mut count = 0usize;
+
+    while let Some(field) = multipart
+        .next_field()
+        .await
+        .map_err(|_| StatusCode::BAD_REQUEST)?
+    {
+        match field.name() {
+            Some("network_id") => {
+                network_id = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+            }
+            Some("count") => {
+                let count_str = field.text().await.map_err(|_| StatusCode::BAD_REQUEST)?;
+                count = count_str.parse().map_err(|_| StatusCode::BAD_REQUEST)?;
+            }
+            _ => {}
+        }
+    }
+
+    if network_id.is_empty() || count == 0 {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    // Get network from database
+    let network = state
+        .database
+        .get_network(&network_id)
+        .await
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+        .ok_or(StatusCode::NOT_FOUND)?;
+
+    // Get unprinted vouchers up to the requested count
     let vouchers = state
         .database
-        .get_vouchers_for_network(network_id)
+        .get_unprinted_vouchers_for_network(&network_id, Some(count))
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     if vouchers.is_empty() {
-        return Ok(Html(templates::no_vouchers_template()).into_response());
+        return Ok(Html(templates::no_unprinted_vouchers_template()).into_response());
     }
+
+    // Mark these vouchers as printed
+    let voucher_ids: Vec<String> = vouchers.iter().map(|v| v.id.clone()).collect();
+    let _ = state.database.mark_vouchers_as_printed(&voucher_ids).await;
 
     // Generate WiFi QR code
     let wifi_qr_data = format!(

@@ -9,6 +9,8 @@ pub struct Voucher {
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub is_used: bool,
     pub used_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub is_printed: bool,
+    pub printed_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 impl Voucher {
@@ -20,6 +22,8 @@ impl Voucher {
             created_at: chrono::Utc::now(),
             is_used: false,
             used_at: None,
+            is_printed: false,
+            printed_at: None,
         }
     }
 }
