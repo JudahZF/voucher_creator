@@ -540,8 +540,7 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
 }
 
 pub fn no_unused_vouchers_template() -> String {
-    format!(
-        r#"
+    r#"
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -583,6 +582,5 @@ pub fn no_unused_vouchers_template() -> String {
             </div>
         </body>
         </html>
-        "#
-    )
+        "#.to_string()
 }

@@ -5,10 +5,10 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use config::Config;
 use clap::Parser;
+use config::Config;
 use serde::Deserialize;
-use std::{collections::HashMap, env, net::SocketAddr, sync::Arc};
+use std::{collections::HashMap, net::SocketAddr, sync::Arc};
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
 mod config;
@@ -48,15 +48,17 @@ struct GenerateQuery {
 async fn main() -> anyhow::Result<()> {
     // Load configuration from config.toml
     let config = Config::load()?;
-    
+
     // Ensure that configured directories exist
     config.ensure_directories_exist()?;
-    
+
     // Parse command line arguments
     let args = Args::parse();
 
     // Use command line args if provided, otherwise use config defaults
-    let host = args.host.unwrap_or_else(|| config.server.default_host.clone());
+    let host = args
+        .host
+        .unwrap_or_else(|| config.server.default_host.clone());
     let port = args.port.unwrap_or(config.server.default_port);
 
     println!("Starting WiFi Voucher Generator");
@@ -105,66 +107,6 @@ async fn main() -> anyhow::Result<()> {
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_csv_processing_with_comments() {
-        let csv_data = "voucher_code\n# This is a comment\nVOUCHER001\n# Another comment\nVOUCHER002\n\n# Final comment\nVOUCHER003";
-
-        let result = process_csv_data(csv_data).await;
-        assert!(result.is_ok());
-
-        let vouchers = result.unwrap();
-        assert_eq!(vouchers.len(), 3);
-        assert_eq!(vouchers[0].code, "VOUCHER001");
-        assert_eq!(vouchers[1].code, "VOUCHER002");
-        assert_eq!(vouchers[2].code, "VOUCHER003");
-    }
-
-    #[tokio::test]
-    async fn test_csv_processing_ignores_empty_lines() {
-        let csv_data = "VOUCHER001\nVOUCHER002\nVOUCHER003";
-
-        let result = process_csv_data(csv_data).await;
-        assert!(result.is_ok());
-
-        let vouchers = result.unwrap();
-        // CSV reader treats first line as header and skips it
-        assert_eq!(vouchers.len(), 2);
-        assert_eq!(vouchers[0].code, "VOUCHER002");
-        assert_eq!(vouchers[1].code, "VOUCHER003");
-    }
-
-    #[tokio::test]
-    async fn test_csv_processing_only_comments() {
-        let csv_data = "# Comment 1\n# Comment 2\n# Comment 3";
-
-        let result = process_csv_data(csv_data).await;
-        assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("No valid voucher codes found"));
-    }
-
-    #[tokio::test]
-    async fn test_csv_processing_mixed_content() {
-        let csv_data = "# WiFi Codes\nvoucher_code\n# Hotel codes\nHOTEL-001\nHOTEL-002\n# Guest codes\nGUEST-001\n# End";
-
-        let result = process_csv_data(csv_data).await;
-        assert!(result.is_ok());
-
-        let vouchers = result.unwrap();
-        assert_eq!(vouchers.len(), 4); // voucher_code header is treated as a voucher code
-        assert_eq!(vouchers[0].code, "voucher_code");
-        assert_eq!(vouchers[1].code, "HOTEL-001");
-        assert_eq!(vouchers[2].code, "HOTEL-002");
-        assert_eq!(vouchers[3].code, "GUEST-001");
-    }
 }
 
 // New admin functions
@@ -223,7 +165,7 @@ async fn create_network(
 
     let network = WiFiNetwork::new(name, ssid, password, description);
 
-    if let Err(_) = state.database.create_network(&network).await {
+    if state.database.create_network(&network).await.is_err() {
         return Err(StatusCode::INTERNAL_SERVER_ERROR);
     }
 
@@ -282,7 +224,12 @@ async fn admin_upload_csv(
                 voucher.network_id = Some(network_id.clone());
             }
 
-            if let Err(_) = state.database.create_vouchers(&network_vouchers).await {
+            if state
+                .database
+                .create_vouchers(&network_vouchers)
+                .await
+                .is_err()
+            {
                 return Err(StatusCode::INTERNAL_SERVER_ERROR);
             }
 
@@ -340,7 +287,7 @@ async fn upload_csv(
 
             match process_csv_data(&csv_content).await {
                 Ok(vouchers) => {
-                    if let Err(_) = state.database.create_vouchers(&vouchers).await {
+                    if state.database.create_vouchers(&vouchers).await.is_err() {
                         return Err(StatusCode::INTERNAL_SERVER_ERROR);
                     }
 
@@ -526,7 +473,7 @@ async fn generate_vouchers(
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
         .ok_or(StatusCode::NOT_FOUND)?;
-    
+
     // Get voucher counts for display
     let voucher_counts = state
         .database
@@ -649,4 +596,64 @@ async fn mark_voucher_unused(
 ) -> impl IntoResponse {
     let _ = state.database.mark_voucher_as_unused(&voucher_id).await;
     axum::response::Redirect::to("/vouchers")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_csv_processing_with_comments() {
+        let csv_data = "voucher_code\n# This is a comment\nVOUCHER001\n# Another comment\nVOUCHER002\n\n# Final comment\nVOUCHER003";
+
+        let result = process_csv_data(csv_data).await;
+        assert!(result.is_ok());
+
+        let vouchers = result.unwrap();
+        assert_eq!(vouchers.len(), 3);
+        assert_eq!(vouchers[0].code, "VOUCHER001");
+        assert_eq!(vouchers[1].code, "VOUCHER002");
+        assert_eq!(vouchers[2].code, "VOUCHER003");
+    }
+
+    #[tokio::test]
+    async fn test_csv_processing_ignores_empty_lines() {
+        let csv_data = "VOUCHER001\nVOUCHER002\nVOUCHER003";
+
+        let result = process_csv_data(csv_data).await;
+        assert!(result.is_ok());
+
+        let vouchers = result.unwrap();
+        // CSV reader treats first line as header and skips it
+        assert_eq!(vouchers.len(), 2);
+        assert_eq!(vouchers[0].code, "VOUCHER002");
+        assert_eq!(vouchers[1].code, "VOUCHER003");
+    }
+
+    #[tokio::test]
+    async fn test_csv_processing_only_comments() {
+        let csv_data = "# Comment 1\n# Comment 2\n# Comment 3";
+
+        let result = process_csv_data(csv_data).await;
+        assert!(result.is_err());
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("No valid voucher codes found"));
+    }
+
+    #[tokio::test]
+    async fn test_csv_processing_mixed_content() {
+        let csv_data = "# WiFi Codes\nvoucher_code\n# Hotel codes\nHOTEL-001\nHOTEL-002\n# Guest codes\nGUEST-001\n# End";
+
+        let result = process_csv_data(csv_data).await;
+        assert!(result.is_ok());
+
+        let vouchers = result.unwrap();
+        assert_eq!(vouchers.len(), 4); // voucher_code header is treated as a voucher code
+        assert_eq!(vouchers[0].code, "voucher_code");
+        assert_eq!(vouchers[1].code, "HOTEL-001");
+        assert_eq!(vouchers[2].code, "HOTEL-002");
+        assert_eq!(vouchers[3].code, "GUEST-001");
+    }
 }
