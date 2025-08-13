@@ -2,83 +2,69 @@
     class="bg-white border-2 border-blue-500 rounded-xl shadow-lg p-3 mb-2 voucher-card hover:shadow-xl transition-all duration-300"
     style="page-break-inside: avoid"
 >
-    <div class="flex items-start justify-between gap-4">
+    <div class="border-b border-gray-200 pb-1 mb-2">
+        <h3 class="text-xl font-bold text-gray-800 flex items-center">
+            <i class="fas fa-wifi text-blue-500 mr-2"></i>
+            WiFi Access Voucher
+        </h3>
+    </div>
+    <div class="flex items-start justify-between gap-4 grow-0">
         <!-- Left side - Text information -->
         <div class="flex-1 space-y-3">
-            <div class="border-b border-gray-200 pb-1 mb-2">
-                <h3 class="text-xl font-bold text-gray-800 flex items-center">
-                    <i class="fas fa-wifi text-blue-500 mr-2"></i>
-                    WiFi Access Voucher
-                </h3>
-                <p class="text-sm text-gray-500 mt-1">
-                    Connect to WiFi Network
-                </p>
-            </div>
-
             <div class="space-y-2">
-                <div class="flex items-center">
-                    <span class="text-sm font-semibold text-gray-700 w-20"
+                <div class="flex flex-col">
+                    <span class="font-semibold text-gray-700 w-20"
                         >Network:</span
                     >
-                    <span class="text-sm text-gray-900 font-medium"
+                    <span class="text-gray-900 text-xl font-medium mt-1"
                         >{{NETWORK_NAME}}</span
                     >
                 </div>
-
-                <div class="space-y-1">
-                    <span class="text-sm font-semibold text-gray-700"
-                        >Access Code:</span
-                    >
-                    <div
-                        class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 px-3 py-2 rounded-lg"
-                    >
-                        <span
-                            class="text-lg font-mono font-bold text-gray-800 tracking-wider break-all"
-                        >
-                            {{VOUCHER_CODE}}
-                        </span>
-                    </div>
-                </div>
             </div>
 
-            <div
-                class="flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg qr-instruction"
-            >
-                <i class="fas fa-qrcode mr-2"></i>
-                <span
-                    >First scan the QR code or connect with the WiFi details
-                    below,<br />
-                    then enter the access code when prompted</span
+            <div class="space-y-1">
+                <span class="font-semibold text-gray-700">Access Code:</span>
+                <div
+                    class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 px-3 py-2 rounded-lg"
                 >
+                    <span
+                        class="text-lg font-mono font-bold text-gray-800 tracking-wider break-all"
+                    >
+                        {{VOUCHER_CODE}}
+                    </span>
+                </div>
             </div>
         </div>
 
         <!-- Right side - QR Code -->
         <div class="flex-shrink-0">
             <style>
-                /* Increase QR code size when printing without changing card layout.
-                   Use a more specific selector and !important so this overrides the
-                   print rules in vouchers.html (which target .voucher-card .flex-shrink-0 > div). */
-                .voucher-card .flex-shrink-0 > .qr-container {
-                    width: 8rem !important;
-                    height: 8rem !important;
-                }
-                /* Fallback generic selector for screen */
+                /* QR sizing defaults for screen only.
+                   IMPORTANT: Removed print-specific !important rules so page-level
+                   print CSS (e.g. vouchers.html) can control QR size for printing.
+                   These defaults provide a reasonable on-screen appearance but will
+                   not force sizes during print. */
                 .qr-container {
-                    width: 8rem !important;
-                    height: 8rem !important;
+                    width: 8rem;
+                    height: 8rem;
+                    max-width: 80mm;
+                    max-height: 80mm;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-sizing: border-box;
                 }
                 @media print {
                     /* Highly specific rule to override other print rules and use more of the card.
                        Set larger size (in mm to be consistent with vouchers.html measurements). */
                     .voucher-card .flex-shrink-0 > .qr-container {
-                        width: 38mm !important;
-                        height: 38mm !important;
+                        width: 46mm !important;
+                        height: 46mm !important;
                     }
                     /* Also target the same element when a generic selector is used elsewhere */
                     .voucher-card .flex-shrink-0 > div.qr-container {
-                        width: 38mm !important;
-                        height: 38mm !important;
+                        width: 46mm !important;
+                        height: 46mm !important;
                     }
                     /* Ensure the img inside still fills the container */
                     .voucher-card .qr-container img {
@@ -101,9 +87,25 @@
         </div>
     </div>
 
+    <div
+        class="w-full mt-1 text-gray-700 bg-gray-50 px-2 py-1 rounded-lg qr-instruction-full"
+        style="box-sizing: border-box; font-size: 14px"
+    >
+        <div
+            style="
+                display: inline-block;
+                vertical-align: middle;
+                width: calc(100% - 1.75rem);
+            "
+        >
+            First scan the QR code or connect with the WiFi details below, then
+            enter the access code when prompted
+        </div>
+    </div>
+
     <!-- Full-width network credentials placed beneath the voucher content -->
     <div
-        class="mt-2 text-sm bg-gray-50 px-2 py-1 rounded-lg"
+        class="mt-2 text-lg bg-gray-50 px-2 py-1 rounded-lg"
         style="box-sizing: border-box"
     >
         <div class="text-gray-700 font-mono">

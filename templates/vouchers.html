@@ -10,87 +10,101 @@
             rel="stylesheet"
         />
         <style>
-            /* Print layout tuned for A4 portrait to fit 8 vouchers per page (2 columns × 4 rows).
-               Uses explicit mm sizes and @page to make layout more reliable.
-               Adjusted to increase card height, reduce QR size/padding, and allow visible overflow
-               so credentials do not get clipped. */
+            /* Print layout tuned for A4 landscape to fit 6 vouchers per page (3 columns × 2 rows).
+               Uses explicit mm sizes and @page to make layout reliable. Increased label size and
+               QR/code sizing to take advantage of the larger landscape space. */
             @page {
-                size: A4 portrait;
+                size: A4 landscape;
                 margin: 3mm;
             }
 
             @media print {
-                /* Explicit page dimensions for A4 portrait */
+                /* Explicit page dimensions for A4 landscape */
                 html,
                 body {
-                    width: 210mm;
-                    height: 297mm;
+                    width: 297mm;
+                    height: 210mm;
                 }
 
                 .no-print {
                     display: none !important;
                 }
 
-                /* Force 2 columns on print for consistent 8-up layout */
+                /* Use 3 columns on print for a 6-up layout */
                 .voucher-grid {
                     display: grid !important;
-                    grid-template-columns: repeat(2, 1fr) !important;
-                    gap: 2mm !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 3mm !important;
                 }
 
-                /* Calculate card size to fit 4 rows within printable height.
-                   Use the full usable page area (page height minus 2*margin) divided by 4.
-                   We subtract a small gap to avoid clipping on printers with non-printable edges. */
+                /* Calculate card size to fit 2 rows within printable height.
+                   Use the full usable page area (page height minus margins) divided by 2. */
                 .voucher-card {
-                    /* Make card a vertical flex container so the credential strip can sit at the bottom */
                     display: flex !important;
                     flex-direction: column !important;
-                    justify-content: space-between !important;
+                    /* Keep the main content pinned to the top of the card for print */
+                    justify-content: flex-start !important;
                     break-inside: avoid;
                     page-break-inside: avoid;
                     margin: 0 !important;
-                    padding: 2mm !important; /* slightly reduced padding to maximize usable area */
+                    padding: 2.5mm !important;
                     width: calc(
-                        (210mm - 6mm) / 2 - 2mm
-                    ) !important; /* (page width - margins)/2 - gap */
-                    height: calc(
-                        (297mm - 6mm) / 5 - 2mm
-                    ) !important; /* (page height - margins)/5 - gap (5 rows) */
+                        (297mm - 6mm) / 3 - 3mm
+                    ) !important; /* (page width - margins)/3 - gap */
+                    /* Let the card height be determined by its content for print */
+                    height: auto !important;
                     box-sizing: border-box;
-                    /* Allow overflow to be visible in case credential box needs extra space */
                     overflow: visible !important;
                     position: relative;
                     min-height: 0 !important;
                 }
 
-                /* Ensure the main voucher body (the first child .flex) grows to fill available space
-                   and can shrink without forcing the credential strip off the page.
-                   Also prevent its content from overflowing the card area so the credential
-                   strip remains visible in the allocated fixed height. */
+                /* Ensure the main voucher body fills available space */
                 .voucher-card > .flex {
-                    flex: 1 1 auto !important;
+                    /* Allow the main row to wrap so full-width elements (like the
+                       instruction) can sit directly beneath the main left/right columns.
+                       Reduce the gap so the instruction sits closer to the main content. */
+                    flex: 0 0 fit-content !important;
                     min-height: 0 !important;
                     display: flex !important;
-                    overflow: hidden !important;
+                    flex-wrap: wrap !important;
+                    align-items: flex-start !important;
+                    gap: 0.5mm !important;
+                    /* Make overflow visible so wrapped content isn't clipped */
+                    overflow: visible !important;
                     box-sizing: border-box !important;
                 }
 
-                /* Ensure QR wrapper fills its allocated area and remove inner padding.
-                                   Use percentage width (~55% of the card) and an aspect-ratio so the QR grows larger
-                                   while remaining square. Also include a larger max-width cap (in mm) to avoid overflow
-                                   on very wide cards. Keeps flex centering so the QR stays aligned. */
+                /* Treat the instruction as a full-width item inside the flex flow.
+                   This makes it sit directly under the main row with only a small gap. */
+                .voucher-card .qr-instruction-full {
+                    width: 100% !important;
+                    /* Remove the extra top margin and reduce vertical padding so this
+                       instruction block sits immediately beneath the main row. */
+                    margin-top: 0mm !important;
+                    padding-top: 0.6mm !important;
+                    padding-bottom: 0.6mm !important;
+                    padding-left: 2mm !important;
+                    padding-right: 2mm !important;
+                    background: #f8fafc !important;
+                    box-sizing: border-box !important;
+                    position: relative !important;
+                }
+
+                /* QR wrapper: allow it to grow larger relative to the card but reserve space
+                   for the credential strip at the bottom. */
                 .voucher-card .flex-shrink-0 > div {
-                    width: 55% !important;
-                    max-width: 80mm !important;
+                    width: 45% !important; /* roughly half the card width */
+                    max-width: 86mm !important;
                     aspect-ratio: 1 / 1 !important;
-                    padding: 0.5mm !important;
+                    padding: 0.7mm !important;
                     display: flex !important;
                     align-items: center !important;
                     justify-content: center !important;
                     box-sizing: border-box !important;
-                    /* Prevent the QR from growing so tall it overlaps the credential strip.
-                                       Reserve space for the credential strip (14mm) and a small gap (2mm). */
-                    max-height: calc(100% - 20mm - 2mm) !important;
+                    /* Reserve space for credential strip (approx 18mm) and small gap.
+                       Reduced reserved bottom space to allow ~6mm larger QR. */
+                    max-height: calc(100% - 16mm) !important;
                     overflow: hidden !important;
                 }
 
@@ -102,9 +116,8 @@
                     display: block !important;
                 }
 
-                /* Reduce typography and icon sizes in print so text fits within each card */
+                /* Increase typography for printed labels to take advantage of landscape */
                 .voucher-card h3 {
-                    font-size: 11px !important;
                     margin: 0 !important;
                 }
                 .voucher-card p,
@@ -113,61 +126,46 @@
                 .voucher-card .font-mono,
                 .voucher-card span,
                 .voucher-card div {
-                    font-size: 8.5px !important;
                     line-height: 1.05 !important;
                 }
 
                 .voucher-card i,
                 .voucher-card .fas {
-                    font-size: 9px !important;
+                    font-size: 22px !important;
                 }
 
-                /* Tighten layout of access code box */
+                /* Slightly larger padding on the access code box for readability */
                 .voucher-card .bg-gradient-to-r.from-blue-50 {
-                    padding: 1.5mm 2mm !important;
-                }
-                .voucher-card .text-lg {
-                    font-size: 10px !important;
-                }
-                /* Reduce padding on the small QR instruction box so it sits slightly higher on printed labels */
-                .voucher-card .qr-instruction {
-                    padding-top: 0.6mm !important;
-                    padding-bottom: 0.6mm !important;
-                    padding-left: 1.2mm !important;
-                    padding-right: 1.2mm !important;
-                    line-height: 1 !important;
-                    font-size: 8.5px !important;
+                    padding: 2.2mm 2.6mm !important;
                 }
 
-                /* Ensure the credential strip (below voucher body) is visible and sized.
-                   Reserve a smaller minimum height so main content above can be sized reliably,
-                   but allow the credential area to grow to show full SSID/password text.
-                   Layout uses two rows: headers on the first line, values on the second.
-                   Password is right-aligned; SSID is left-aligned. */
+                /* QR instruction box */
+                .voucher-card .qr-instruction {
+                    padding-top: 1mm !important;
+                    padding-bottom: 1mm !important;
+                    padding-left: 1.4mm !important;
+                    padding-right: 1.4mm !important;
+                    line-height: 1 !important;
+                    font-size: 14px !important;
+                }
+
+                /* Credential strip: flow beneath the main content for print (not absolutely positioned) */
                 .voucher-card > .mt-2 {
                     display: flex !important;
                     flex-direction: column !important;
                     align-items: stretch !important;
-                    justify-content: flex-end !important;
+                    justify-content: flex-start !important;
                     gap: 1mm !important;
-                    /* smaller reserved min height, allow expansion to show full content */
-                    min-height: 7mm !important;
+                    min-height: 0 !important;
                     max-height: none !important;
                     flex: 0 0 auto !important;
-                    /* slightly reduced padding to fit within smaller reserved height */
-                    padding: 1mm 1.2mm !important;
+                    padding: 1.6mm 1.6mm !important;
                     background: #f8fafc !important;
                     box-sizing: border-box !important;
-                    font-size: 9.5px !important;
-                    /* allow credentials to expand and remain visible */
+                    font-size: 14px !important;
                     overflow: visible !important;
-                    /* Pin to bottom but permit overflow to be visible if content wraps */
-                    position: absolute !important;
-                    bottom: 2mm !important;
-                    left: 0mm !important;
-                    right: 0mm !important;
-                    z-index: 10 !important;
-                    margin: 0mm 2mm !important;
+                    /* Allow this credential strip to flow naturally beneath the voucher content */
+                    margin: 2mm 0 0 0 !important;
                 }
 
                 body {
