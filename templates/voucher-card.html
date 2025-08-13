@@ -46,8 +46,9 @@
             >
                 <i class="fas fa-qrcode mr-2"></i>
                 <span
-                    >First scan the QR code,<br />
-                    then enter the code manually</span
+                    >First scan the QR code or connect with the WiFi details
+                    below,<br />
+                    then enter the access code when prompted</span
                 >
             </div>
         </div>
@@ -97,40 +98,22 @@
                     class="w-full h-full object-contain block"
                 />
             </div>
-            <div class="text-center mt-0">
-                <span
-                    class="inline print:hidden text-xs text-gray-500 font-medium"
-                    >QR Code</span
-                >
-                <span
-                    class="hidden print:inline text-xs text-gray-500 font-medium"
-                    >QR</span
-                >
-            </div>
         </div>
     </div>
 
     <!-- Full-width network credentials placed beneath the voucher content -->
     <div
-        class="mt-2 text-sm bg-gray-50 px-2 py-1 rounded-lg w-full"
+        class="mt-2 text-sm bg-gray-50 px-2 py-1 rounded-lg"
         style="box-sizing: border-box"
     >
         <div class="text-gray-700 font-mono">
-            <div class="flex-1 min-w-0">
-                <span class="text-gray-500 mr-1">SSID:</span>
-                <span
-                    class="font-semibold text-gray-900 break-all ssid-value"
-                    style="display: inline-block; max-width: 65%"
-                    >{{NETWORK_SSID}}</span
-                >
+            <div class="min-w-0">
+                <span class="text-gray-900 mr-1">SSID: {{NETWORK_SSID}} </span>
             </div>
-            <div class="flex-1 text-right min-w-0">
-                <span class="text-gray-500 mr-1">Password:</span>
-                <span
-                    class="font-semibold text-gray-900 break-all password-value"
-                    style="display: inline-block; max-width: 65%"
-                    >{{NETWORK_PASSWORD}}</span
-                >
+            <div class="min-w-0">
+                <span class="text-gray-900 mr-1"
+                    >Password: {{NETWORK_PASSWORD}}
+                </span>
             </div>
         </div>
     </div>

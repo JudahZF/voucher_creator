@@ -151,7 +151,7 @@
                     justify-content: flex-end !important;
                     gap: 1mm !important;
                     /* smaller reserved min height, allow expansion to show full content */
-                    min-height: 10mm !important;
+                    min-height: 7mm !important;
                     max-height: none !important;
                     flex: 0 0 auto !important;
                     /* slightly reduced padding to fit within smaller reserved height */
@@ -164,55 +164,10 @@
                     /* Pin to bottom but permit overflow to be visible if content wraps */
                     position: absolute !important;
                     bottom: 2mm !important;
-                    left: 0 !important;
-                    right: 0 !important;
+                    left: 0mm !important;
+                    right: 0mm !important;
                     z-index: 10 !important;
-                    margin: 0 !important;
-                }
-                /* Keep container as a row for the two columns (left=SSID, right=Password) */
-                .voucher-card > .mt-2 .font-mono {
-                    display: flex !important;
-                    flex-direction: row !important;
-                    align-items: flex-start !important;
-                    justify-content: space-between !important;
-                    gap: 4mm !important;
-                    width: 100% !important;
-                }
-                /* Make each side a column: header label above value */
-                .voucher-card > .mt-2 .font-mono > div {
-                    display: flex !important;
-                    flex-direction: column !important;
-                    gap: 0.5mm !important;
-                    width: 50% !important;
-                    box-sizing: border-box !important;
-                }
-                /* Left side (SSID) left-aligned header and value */
-                .voucher-card > .mt-2 .font-mono > div:first-child {
-                    align-items: flex-start !important;
-                    text-align: left !important;
-                }
-                /* Right side (Password) right-aligned header and value */
-                .voucher-card > .mt-2 .font-mono > div:last-child {
-                    align-items: flex-end !important;
-                    text-align: right !important;
-                }
-                /* Header labels (small gray text) should appear on their own line */
-                .voucher-card > .mt-2 .font-mono span.text-gray-500 {
-                    display: block !important;
-                    font-size: 9px !important;
-                    color: #6b7280 !important;
-                }
-                /* Value styling: allow wrapping so full text is visible, no truncation */
-                .voucher-card > .mt-2 .ssid-value,
-                .voucher-card > .mt-2 .password-value {
-                    white-space: normal !important;
-                    word-break: break-word !important;
-                    overflow-wrap: anywhere !important;
-                    display: block !important;
-                    font-size: 11px !important;
-                    line-height: 1.05 !important;
-                    font-weight: 600 !important;
-                    max-width: 100% !important;
+                    margin: 0mm 2mm !important;
                 }
 
                 body {
