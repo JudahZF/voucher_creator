@@ -15,7 +15,6 @@
                QR/code sizing to take advantage of the larger landscape space. */
             @page {
                 size: A4 landscape;
-                margin: 3mm;
             }
 
             @media print {
@@ -49,8 +48,8 @@
                     margin: 0 !important;
                     padding: 2.5mm !important;
                     width: calc(
-                        (297mm - 6mm) / 3 - 3mm
-                    ) !important; /* (page width - margins)/3 - gap */
+                        297mm / 3 - 3mm
+                    ) !important; /* page width / 3 - gap (no forced @page margin subtraction) */
                     /* Let the card height be determined by its content for print */
                     height: auto !important;
                     box-sizing: border-box;
@@ -175,7 +174,8 @@
 
                 .print-container {
                     max-width: none;
-                    padding: 0;
+                    padding: 0 !important;
+                    margin: 0 !important;
                 }
             }
 
