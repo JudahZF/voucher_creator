@@ -564,6 +564,7 @@ async fn print_vouchers(
                 &wifi_qr_base64,
                 &network.ssid,
                 &network.name,
+                &network.password,
                 &voucher.code,
             )
         })

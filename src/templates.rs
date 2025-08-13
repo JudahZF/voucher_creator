@@ -1,6 +1,6 @@
 use crate::database::VoucherCounts;
-use crate::wifi_network::WiFiNetwork;
 use crate::voucher::Voucher;
+use crate::wifi_network::WiFiNetwork;
 use std::fs;
 
 // Load template files at compile time or runtime
@@ -9,7 +9,7 @@ fn load_template(name: &str) -> String {
         Ok(config) => config.templates_dir,
         Err(_) => "templates".to_string(), // Fallback to default if config can't be loaded
     };
-    
+
     let template_path = format!("{}/{}.html", templates_dir, name);
     fs::read_to_string(&template_path)
         .unwrap_or_else(|_| panic!("Failed to load template: {}", template_path))
@@ -31,12 +31,14 @@ pub fn generate_voucher_card(
     qr_code_base64: &str,
     network_ssid: &str,
     network_name: &str,
+    network_password: &str,
     voucher_code: &str,
 ) -> String {
     voucher_card_template()
         .replace("{{QR_CODE_BASE64}}", qr_code_base64)
         .replace("{{NETWORK_SSID}}", network_ssid)
         .replace("{{NETWORK_NAME}}", network_name)
+        .replace("{{NETWORK_PASSWORD}}", network_password)
         .replace("{{VOUCHER_CODE}}", voucher_code)
 }
 
@@ -454,7 +456,7 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                             </h1>
                             <p class="text-blue-100">Select how many voucher codes to print for {}</p>
                         </div>
-                        
+
                         <div class="p-8">
                             <div class="grid grid-cols-2 gap-4 mb-8">
                                 <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border border-green-200">
@@ -479,16 +481,16 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
 
                             <form action="/print" method="post" enctype="multipart/form-data" class="space-y-6">
                                 <input type="hidden" name="network_id" value="{}">
-                                
+
                                 <div>
                                     <label for="count" class="block text-sm font-bold text-gray-700 mb-3">
                                         <i class="fas fa-hashtag mr-2"></i>Number of vouchers to use
                                     </label>
-                                    <input type="number" 
-                                           id="count" 
-                                           name="count" 
-                                           min="1" 
-                                           max="{}" 
+                                    <input type="number"
+                                           id="count"
+                                           name="count"
+                                           min="1"
+                                           max="{}"
                                            value="1"
                                            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-semibold"
                                            required>
@@ -504,7 +506,7 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                                         <div>
                                             <h4 class="font-bold text-amber-800 mb-2">Important Note</h4>
                                             <p class="text-amber-700 text-sm">
-                                                Once vouchers are used, they will be marked as "used" and won't appear in future requests. 
+                                                Once vouchers are used, they will be marked as "used" and won't appear in future requests.
                                                 This ensures each voucher code is only used once.
                                             </p>
                                         </div>
@@ -512,11 +514,11 @@ pub fn print_selection_page(network: &WiFiNetwork, voucher_counts: &VoucherCount
                                 </div>
 
                                 <div class="flex space-x-4">
-                                    <button type="submit" 
+                                    <button type="submit"
                                             class="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-4 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                                         <i class="fas fa-print mr-2"></i>Use Vouchers
                                     </button>
-                                    <a href="/admin" 
+                                    <a href="/admin"
                                        class="flex-1 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-6 py-4 rounded-xl font-bold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl text-center">
                                         <i class="fas fa-arrow-left mr-2"></i>Cancel
                                     </a>
@@ -560,17 +562,17 @@ pub fn no_unused_vouchers_template() -> String {
                             </h1>
                             <p class="text-amber-100">All vouchers for this network have already been printed</p>
                         </div>
-                        
+
                         <div class="p-8 text-center">
                             <div class="bg-gradient-to-br from-amber-50 to-orange-100 rounded-2xl p-12 border border-amber-200">
                                 <i class="fas fa-print text-6xl text-amber-400 mb-6"></i>
                                 <h3 class="text-2xl font-bold text-gray-800 mb-4">All Vouchers Used</h3>
                                 <p class="text-gray-600 mb-6">
-                                    There are no unused voucher codes remaining for this network. 
+                                    There are no unused voucher codes remaining for this network.
                                     All available vouchers have already been used.
                                 </p>
                                 <div class="space-y-3">
-                                    <a href="/admin" 
+                                    <a href="/admin"
                                        class="inline-block bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                                         <i class="fas fa-arrow-left mr-2"></i>Back to Admin
                                     </a>

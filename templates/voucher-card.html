@@ -1,48 +1,136 @@
-<div class="bg-white border-2 border-blue-500 rounded-xl shadow-lg p-6 mb-4 voucher-card hover:shadow-xl transition-all duration-300" style="page-break-inside: avoid">
+<div
+    class="bg-white border-2 border-blue-500 rounded-xl shadow-lg p-3 mb-2 voucher-card hover:shadow-xl transition-all duration-300"
+    style="page-break-inside: avoid"
+>
     <div class="flex items-start justify-between gap-4">
         <!-- Left side - Text information -->
         <div class="flex-1 space-y-3">
-            <div class="border-b border-gray-200 pb-2 mb-3">
+            <div class="border-b border-gray-200 pb-1 mb-2">
                 <h3 class="text-xl font-bold text-gray-800 flex items-center">
                     <i class="fas fa-wifi text-blue-500 mr-2"></i>
                     WiFi Access Voucher
                 </h3>
-                <p class="text-sm text-gray-500 mt-1">Connect to WiFi Network</p>
+                <p class="text-sm text-gray-500 mt-1">
+                    Connect to WiFi Network
+                </p>
             </div>
-            
+
             <div class="space-y-2">
                 <div class="flex items-center">
-                    <span class="text-sm font-semibold text-gray-700 w-20">Network:</span>
-                    <span class="text-sm text-gray-900 font-medium">{{NETWORK_NAME}}</span>
+                    <span class="text-sm font-semibold text-gray-700 w-20"
+                        >Network:</span
+                    >
+                    <span class="text-sm text-gray-900 font-medium"
+                        >{{NETWORK_NAME}}</span
+                    >
                 </div>
-                
+
                 <div class="space-y-1">
-                    <span class="text-sm font-semibold text-gray-700">Access Code:</span>
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 px-3 py-2 rounded-lg">
-                        <span class="text-lg font-mono font-bold text-gray-800 tracking-wider break-all">
+                    <span class="text-sm font-semibold text-gray-700"
+                        >Access Code:</span
+                    >
+                    <div
+                        class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 px-3 py-2 rounded-lg"
+                    >
+                        <span
+                            class="text-lg font-mono font-bold text-gray-800 tracking-wider break-all"
+                        >
                             {{VOUCHER_CODE}}
                         </span>
                     </div>
                 </div>
             </div>
-            
-            <div class="flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+
+            <div
+                class="flex items-center text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg qr-instruction"
+            >
                 <i class="fas fa-qrcode mr-2"></i>
-                <span>Scan QR code or enter code manually</span>
+                <span
+                    >First scan the QR code,<br />
+                    then enter the code manually</span
+                >
             </div>
         </div>
 
         <!-- Right side - QR Code -->
         <div class="flex-shrink-0">
-            <div class="bg-white border-2 border-gray-200 rounded-xl p-2 shadow-sm">
+            <style>
+                /* Increase QR code size when printing without changing card layout.
+                   Use a more specific selector and !important so this overrides the
+                   print rules in vouchers.html (which target .voucher-card .flex-shrink-0 > div). */
+                .voucher-card .flex-shrink-0 > .qr-container {
+                    width: 8rem !important;
+                    height: 8rem !important;
+                }
+                /* Fallback generic selector for screen */
+                .qr-container {
+                    width: 8rem !important;
+                    height: 8rem !important;
+                }
+                @media print {
+                    /* Highly specific rule to override other print rules and use more of the card.
+                       Set larger size (in mm to be consistent with vouchers.html measurements). */
+                    .voucher-card .flex-shrink-0 > .qr-container {
+                        width: 38mm !important;
+                        height: 38mm !important;
+                    }
+                    /* Also target the same element when a generic selector is used elsewhere */
+                    .voucher-card .flex-shrink-0 > div.qr-container {
+                        width: 38mm !important;
+                        height: 38mm !important;
+                    }
+                    /* Ensure the img inside still fills the container */
+                    .voucher-card .qr-container img {
+                        width: 100% !important;
+                        height: 100% !important;
+                        object-fit: contain !important;
+                        display: block !important;
+                    }
+                }
+            </style>
+            <div
+                class="bg-white border-2 border-gray-200 rounded-xl p-0 shadow-sm flex items-center justify-center qr-container"
+            >
                 <img
                     src="data:image/png;base64,{{QR_CODE_BASE64}}"
                     alt="WiFi QR Code for {{NETWORK_NAME}}"
-                    class="w-28 h-28 object-contain"
+                    class="w-full h-full object-contain block"
                 />
-                <div class="text-center mt-1">
-                    <span class="text-xs text-gray-500 font-medium">QR Code</span>
-                </div>
+            </div>
+            <div class="text-center mt-0">
+                <span
+                    class="inline print:hidden text-xs text-gray-500 font-medium"
+                    >QR Code</span
+                >
+                <span
+                    class="hidden print:inline text-xs text-gray-500 font-medium"
+                    >QR</span
+                >
+            </div>
+        </div>
+    </div>
+
+    <!-- Full-width network credentials placed beneath the voucher content -->
+    <div
+        class="mt-2 text-sm bg-gray-50 px-2 py-1 rounded-lg w-full"
+        style="box-sizing: border-box"
+    >
+        <div class="text-gray-700 font-mono">
+            <div class="flex-1 min-w-0">
+                <span class="text-gray-500 mr-1">SSID:</span>
+                <span
+                    class="font-semibold text-gray-900 break-all ssid-value"
+                    style="display: inline-block; max-width: 65%"
+                    >{{NETWORK_SSID}}</span
+                >
+            </div>
+            <div class="flex-1 text-right min-w-0">
+                <span class="text-gray-500 mr-1">Password:</span>
+                <span
+                    class="font-semibold text-gray-900 break-all password-value"
+                    style="display: inline-block; max-width: 65%"
+                    >{{NETWORK_PASSWORD}}</span
+                >
             </div>
         </div>
     </div>

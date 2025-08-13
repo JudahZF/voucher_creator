@@ -47,3 +47,4 @@ Thumbs.db
 # Generated voucher files (if any)
 generated_vouchers/
 voucher_output/
+vouchers.db
